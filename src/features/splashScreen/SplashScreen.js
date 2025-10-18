@@ -26,7 +26,6 @@ export default function SplashScreen({ onFinish }) {
   const last = slides.length - 1;
   const ref = useRef(null);
 
-  // update active dot when user swipes / scrolls
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -51,7 +50,6 @@ export default function SplashScreen({ onFinish }) {
 
   return (
     <div className="w-full min-h-dvh grid place-items-center py-6">
-      {/* Phone-looking frame centered on desktop */}
       <div className="relative w-[380px] max-w-[92vw] h-[760px] max-h-[92dvh] bg-white rounded-phone shadow-phone border border-neutral-200 overflow-hidden">
         <div style={{ height: "var(--safe-top)" }} />
 
@@ -85,7 +83,6 @@ export default function SplashScreen({ onFinish }) {
               </div>
 
               <div className="mt-auto px-6 pb-6">
-                {/* dots */}
                 <div className="flex items-center justify-center gap-2 my-3">
                   {slides.map((_, d) => (
                     <button
@@ -115,7 +112,6 @@ export default function SplashScreen({ onFinish }) {
                     <span className="sr-only">
                       {idx === last ? "Mulai" : "Lanjut"}
                     </span>
-                    {/* simple arrow */}
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                       <path
                         d="M8 5l8 7-8 7"
