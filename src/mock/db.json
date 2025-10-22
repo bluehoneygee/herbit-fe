@@ -1,0 +1,141 @@
+{
+  "summary_home": {
+    "user": {
+      "id": "u_1",
+      "name": "Ibu Dhiah",
+      "photo_url": "/sample-avatar.png",
+      "total_points": 452
+    },
+    "progress": {
+      "date": "2025-10-21",
+      "total": 5,
+      "completed": 3,
+      "percent": 60
+    },
+    "ecoenzym": {
+      "projectId": "eco_1",
+      "batch": "Batch #2 Eco Enzym",
+      "status": "ongoing",
+      "progressPercent": 40,
+      "monthNumber": 2,
+      "daysRemaining": 28
+    },
+    "rewardsBanners": [
+      {
+        "id": "reward-1",
+        "image": "/rewards-banner.jpg",
+        "alt": "Rewards terbaru",
+        "href": "#"
+      },
+      {
+        "id": "reward-2",
+        "image": "/rewards-banner.jpg",
+        "alt": "Rewards terbaru",
+        "href": "#"
+      }
+    ],
+    "habitsToday": [
+      {
+        "id": "h1",
+        "title": "Masak secukupnya",
+        "done": true,
+        "status": "Selesai",
+        "icon": "🍳"
+      },
+      {
+        "id": "h2",
+        "title": "Bawa tumbler & bekal",
+        "done": false,
+        "status": "0/1 kali",
+        "icon": "🥤"
+      },
+      {
+        "id": "h3",
+        "title": "Pilah sampah organik",
+        "done": false,
+        "status": "0/1 kali",
+        "icon": "🗑️"
+      }
+    ]
+  },
+  "profile_summary": {
+    "user": {
+      "id": "u_1",
+      "name": "Dhiah Ayu",
+      "photo_url": "/assets/sample-avatar.png",
+      "total_points": 452
+    },
+    "tabs": [
+      {
+        "id": "activities",
+        "label": "Aktivitas"
+      },
+      {
+        "id": "rewards",
+        "label": "Rewards"
+      }
+    ],
+    "activity_filters": [
+      {
+        "id": "all",
+        "label": "Semua"
+      },
+      {
+        "id": "week",
+        "label": "Minggu ini",
+        "active": true
+      },
+      {
+        "id": "month",
+        "label": "Bulan ini"
+      }
+    ],
+    "activities": [
+      {
+        "id": "act-1",
+        "type": "gain",
+        "points": 40,
+        "title": "Daily Habits sempurna!",
+        "description": "Daily Habits sempurna!",
+        "timeLabel": "Hari ini, 12:34",
+        "periods": ["all", "week"]
+      },
+      {
+        "id": "act-2",
+        "type": "gain",
+        "points": 60,
+        "title": "Panen 3 buah pohon",
+        "description": "Panen 3 buah pohon",
+        "timeLabel": "Hari ini, 07:12",
+        "periods": ["all", "week"]
+      },
+      {
+        "id": "act-3",
+        "type": "badge",
+        "points": null,
+        "title": "Challenge selesai!",
+        "description": "Eco-enzym batch #1 dipanen",
+        "timeLabel": "Kemarin, 14:12",
+        "periods": ["all", "week", "month"]
+      },
+      {
+        "id": "act-4",
+        "type": "loss",
+        "points": -20,
+        "title": "Streak putus!",
+        "description": "Tidak ada aktivitas kemarin",
+        "timeLabel": "12 Okt, 16:14",
+        "periods": ["all", "month"]
+      },
+      {
+        "id": "act-5",
+        "type": "gain",
+        "points": 96,
+        "title": "Upload progress eco-enzym",
+        "description": "Upload progress eco-enzym",
+        "timeLabel": "11 Okt, 17:45",
+        "periods": ["all", "month"]
+      }
+    ]
+  }
+}
