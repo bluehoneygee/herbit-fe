@@ -1,14 +1,14 @@
 "use client";
 
+import DailyHabitsList from "@/components/home/DailyHabitsList";
+import DaysScroller from "@/components/home/DaysScroller";
+import EcoEnzymActive from "@/components/home/EcoEnzymActive";
+import HeaderHero from "@/components/home/HeaderHero";
+import ProgressCard from "@/components/home/ProgressCard";
+import RewardsBanner from "@/components/home/RewardsBanner";
+import useHomeSummary from "@/hooks/useHomeSummary";
 import { clampNumber } from "@/lib/utils";
 import { useMemo } from "react";
-import HeaderHero from "../home/HeaderHero";
-import DaysScroller from "../home/DaysScroller";
-import RewardsBanner from "../home/RewardsBanner";
-import ProgressCard from "../home/ProgressCard";
-import EcoEnzymActive from "../home/EcoEnzymActive";
-import DailyHabitsList from "../home/DailyHabitsList";
-import useHomeSummary from "@/hooks/useHomeSummary";
 
 export default function HomePage() {
   const { summary, loading, error } = useHomeSummary();
