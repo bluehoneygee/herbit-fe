@@ -62,7 +62,7 @@
     "user": {
       "id": "u_1",
       "name": "Dhiah Ayu",
-      "photo_url": "/assets/sample-avatar.png",
+      "photo_url": "sample-avatar.png",
       "total_points": 452
     },
     "tabs": [
@@ -93,8 +93,9 @@
     "activities": [
       {
         "id": "act-1",
-        "type": "gain",
-        "points": 40,
+        "type": "leaf",
+        "points": null,
+        "metricLabel": "+5 daun hijau",
         "title": "Daily Habits sempurna!",
         "description": "Daily Habits sempurna!",
         "timeLabel": "Hari ini, 12:34",
@@ -112,25 +113,18 @@
       {
         "id": "act-3",
         "type": "badge",
-        "points": null,
+        "points": 250,
+        "pre_points": null,
+        "metricLabel": "Challenge selesai!",
         "title": "Challenge selesai!",
         "description": "Eco-enzym batch #1 dipanen",
         "timeLabel": "Kemarin, 14:12",
         "periods": ["all", "week", "month"]
       },
       {
-        "id": "act-4",
-        "type": "loss",
-        "points": -20,
-        "title": "Streak putus!",
-        "description": "Tidak ada aktivitas kemarin",
-        "timeLabel": "12 Okt, 16:14",
-        "periods": ["all", "month"]
-      },
-      {
         "id": "act-5",
         "type": "gain",
-        "points": 96,
+        "pre_points": 50,
         "title": "Upload progress eco-enzym",
         "description": "Upload progress eco-enzym",
         "timeLabel": "11 Okt, 17:45",
