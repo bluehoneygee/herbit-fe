@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import apiClient from "@/lib/apiClient";
 
 const DEFAULT_SUMMARY = {
   user: null,
@@ -22,7 +21,7 @@ export function useHomeSummary() {
 
     async function fetchSummary() {
       try {
-        const response = await apiClient.get("/api/summary/home", {
+        const response = await axios.get("/api/summary/home", {
           headers: { "Cache-Control": "no-cache" },
         });
 
