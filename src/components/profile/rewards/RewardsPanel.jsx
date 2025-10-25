@@ -1,13 +1,81 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import RewardsMilestone from "./RewardsMilestone";
 import RewardVoucherCard from "./RewardVoucherCard";
 import RewardHistoryList from "./RewardHistoryList";
+import apiClient from "@/lib/apiClient";
 
-export default function RewardsPanel({ rewards, loading }) {
+export default function RewardsPanel({ rewards, loading, onRefresh }) {
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [redeemSuccess, setRedeemSuccess] = useState(null);
+  const [redeemError, setRedeemError] = useState(null);
+  const [redeeming, setRedeeming] = useState(false);
+  const [available, setAvailable] = useState(rewards?.available ?? []);
+  const [history, setHistory] = useState(rewards?.history ?? []);
+  const [milestone, setMilestone] = useState(rewards?.milestone ?? null);
+
+  useEffect(() => {
+    if (rewards) {
+      setAvailable(rewards.available ?? []);
+      setHistory(rewards.history ?? []);
+      setMilestone(rewards.milestone ?? null);
+    }
+  }, [rewards]);
+
+  const refreshRewards = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/vouchers/summary", {
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const summary = response.data?.data ?? response.data ?? null;
+      if (summary) {
+        setAvailable(summary.available ?? []);
+        setHistory(summary.history ?? []);
+        setMilestone(summary.milestone ?? null);
+      }
+    } catch (error) {
+      console.error("refreshRewards failed:", error);
+    }
+  }, []);
+
+  const handleRedeem = useCallback(
+    async (voucher) => {
+      if (!voucher || redeeming) return;
+      setRedeemError(null);
+      setRedeeming(true);
+      try {
+        const response = await apiClient.post(
+          `/vouchers/${voucher.id ?? voucher.slug}/redeem`
+        );
+        const redemption = response.data?.data ?? response.data ?? null;
+        await refreshRewards();
+        const successPayload = {
+          ...(voucher ?? {}),
+          ...(redemption ?? {}),
+          name: redemption?.name ?? voucher?.name,
+          image:
+            voucher?.image ??
+            redemption?.image ??
+            redemption?.imageUrl ??
+            voucher?.imageUrl,
+        };
+        setRedeemSuccess(successPayload);
+        setSelectedVoucher(null);
+        onRefresh?.();
+      } catch (error) {
+        const message =
+          error?.response?.data?.error?.details ??
+          error?.response?.data?.error ??
+          error?.message ??
+          "Gagal menukar voucher. Coba lagi.";
+        setRedeemError(message);
+      } finally {
+        setRedeeming(false);
+      }
+    },
+    [redeeming, refreshRewards]
+  );
 
   if (!rewards && !loading) {
     return (
@@ -20,8 +88,8 @@ export default function RewardsPanel({ rewards, loading }) {
   return (
     <div className="space-y-6">
       <RewardsMilestone
-        milestone={rewards?.milestone}
-        onClaim={() => setRedeemSuccess(rewards?.milestone)}
+        milestone={milestone}
+        onClaim={() => setRedeemSuccess(milestone)}
       />
 
       <section className="space-y-3">
@@ -29,7 +97,7 @@ export default function RewardsPanel({ rewards, loading }) {
           Voucher tersedia
         </h3>
         <div className="space-y-3">
-          {(rewards?.available ?? []).map((voucher) => (
+          {available.map((voucher) => (
             <RewardVoucherCard
               key={voucher.id}
               voucher={voucher}
@@ -39,18 +107,17 @@ export default function RewardsPanel({ rewards, loading }) {
         </div>
       </section>
 
-      <RewardHistoryList history={rewards?.history ?? []} />
+      <RewardHistoryList history={history} />
 
       <RedeemDialog
         voucher={selectedVoucher}
-        onClose={() => setSelectedVoucher(null)}
-        onConfirm={(voucher) => {
+        loading={redeeming}
+        error={redeemError}
+        onClose={() => {
+          setRedeemError(null);
           setSelectedVoucher(null);
-          setRedeemSuccess({
-            ...voucher,
-            redeemedAt: new Date().toISOString(),
-          });
         }}
+        onConfirm={handleRedeem}
       />
 
       <RedeemSuccessDialog
@@ -61,7 +128,7 @@ export default function RewardsPanel({ rewards, loading }) {
   );
 }
 
-function RedeemDialog({ voucher, onClose, onConfirm }) {
+function RedeemDialog({ voucher, onClose, onConfirm, loading, error }) {
   if (!voucher) return null;
 
   return (
@@ -113,10 +180,21 @@ function RedeemDialog({ voucher, onClose, onConfirm }) {
           <button
             type="button"
             onClick={() => onConfirm?.(voucher)}
-            className="mt-6 w-full rounded-full bg-[#4A2D8B] py-2 text-sm font-semibold text-white shadow-md transition hover:bg-[#3C2374]"
+            disabled={loading}
+        className={`mt-6 w-full rounded-full py-2 text-sm font-semibold text-white shadow-md transition ${
+          loading
+            ? "cursor-wait bg-[#4A2D8B]/60"
+            : "bg-[#4A2D8B] hover:bg-[#3C2374]"
+        }`}
           >
-            Tukar
+            {loading ? "Menukar..." : "Tukar"}
           </button>
+
+          {error && (
+            <p className="mt-3 text-center text-xs font-semibold text-[#E24B4B]">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -143,9 +221,16 @@ function RedeemSuccessDialog({ voucher, onClose }) {
               Voucher Berhasil ditukar!
             </h4>
             <p className="text-sm text-gray-500">Voucher {voucher.name}</p>
-            <p className="text-xs font-semibold text-[#FEA800]">
-              Berlaku sampai: 13 Nov 2025
-            </p>
+            {voucher.expiresAt && (
+              <p className="text-xs font-semibold text-[#FEA800]">
+                Berlaku sampai:{" "}
+                {new Date(voucher.expiresAt).toLocaleDateString("id-ID", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            )}
           </div>
           <button
             type="button"
@@ -161,7 +246,7 @@ function RedeemSuccessDialog({ voucher, onClose }) {
           <div className="rounded-2xl border border-[#FACC15]/40 bg-[#FFF8EB] px-4 py-3 text-center">
             <p className="text-xs font-semibold text-[#FEA800]">Kode voucher</p>
             <div className="mt-2 rounded-xl border border-dashed border-[#FACC15] bg-white px-3 py-2 text-center text-sm font-semibold text-[#4A2D8B]">
-              AVOSKIN50-XY79
+              {voucher.code ?? "Kode voucher disalurkan melalui email"}
             </div>
           </div>
 

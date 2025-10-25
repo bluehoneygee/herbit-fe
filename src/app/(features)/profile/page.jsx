@@ -10,7 +10,7 @@ import useProfileSummary from "@/hooks/useProfileSummar";
 import { useEffect, useMemo, useState } from "react";
 
 export default function ProfilePage() {
-  const { summary, loading, error } = useProfileSummary();
+  const { summary, loading, error, refetch } = useProfileSummary();
 
   const tabs = summary?.tabs ?? [];
   const filters = summary?.activityFilters ?? [];
@@ -85,7 +85,11 @@ export default function ProfilePage() {
               <ActivityList items={activities} loading={loading} />
             </div>
           ) : (
-            <RewardsPanel rewards={summary?.rewards} loading={loading} />
+            <RewardsPanel
+              rewards={summary?.rewards}
+              loading={loading}
+              onRefresh={refetch}
+            />
           )}
         </section>
       </div>

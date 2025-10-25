@@ -4,7 +4,7 @@ import { buildProfileSummary, loadMockData } from "@/lib/mockSummary";
 export async function GET() {
   try {
     const db = await loadMockData();
-    const summary = buildProfileSummary(db);
+    const summary = await buildProfileSummary(db);
 
     if (!summary) {
       return NextResponse.json({ error: "profile_summary not found" }, { status: 404 });

@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import apiClient from "@/lib/apiClient";
 
 const DEFAULT_SUMMARY = {
   user: null,
@@ -16,49 +15,39 @@ export default function useProfileSummary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadProfile() {
-      try {
-        const response = await apiClient.get("/api/profile/summary", {
-          headers: { "Cache-Control": "no-cache" },
-        });
-
-        if (active) {
-          const data = response.data ?? {};
-          setSummary({
-            ...DEFAULT_SUMMARY,
-            ...data,
-            activityFilters:
-              data.activityFilters ??
-              data.activity_filters ??
-              DEFAULT_SUMMARY.activityFilters,
-          });
-        }
-      } catch (err) {
-        if (!active) return;
-        const message = axios.isAxiosError(err)
-          ? err.response?.data?.error ?? err.message
-          : err instanceof Error
-          ? err.message
-          : "Unknown error";
-        setError(message);
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
+  const loadProfile = useCallback(async () => {
+    try {
+      const response = await axios.get("/api/profile/summary", {
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const data = response.data ?? {};
+      setSummary({
+        ...DEFAULT_SUMMARY,
+        ...data,
+        activityFilters:
+          data.activityFilters ??
+          data.activity_filters ??
+          DEFAULT_SUMMARY.activityFilters,
+      });
+      setError(null);
+    } catch (err) {
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.error ?? err.message
+        : err instanceof Error
+        ? err.message
+        : "Unknown error";
+      setError(message);
+    } finally {
+      setLoading(false);
     }
-
-    loadProfile();
-    return () => {
-      active = false;
-    };
   }, []);
 
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
   return useMemo(
-    () => ({ summary, loading, error }),
-    [summary, loading, error]
+    () => ({ summary, loading, error, refetch: loadProfile }),
+    [summary, loading, error, loadProfile]
   );
 }
