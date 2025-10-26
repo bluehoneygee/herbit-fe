@@ -1,16 +1,16 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import useProfileSummary from "@/hooks/useProfileSummar";
+import { ProfileSummaryProvider } from "@/context/ProfileSummaryContext";
 
 export default function ProfileLayoutClient({ params, children }) {
-  const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const { summary, loading, error } = useProfileSummary(params.username);
+  const { summary, loading, error, refetch } = useProfileSummary(params.username);
 
   const tabs = summary?.tabs ?? [];
   const activeTab = useMemo(() => {
@@ -29,21 +29,28 @@ export default function ProfileLayoutClient({ params, children }) {
     [params.username, router]
   );
 
+  const contextValue = useMemo(
+    () => ({ summary, loading, error, refetch }),
+    [summary, loading, error, refetch]
+  );
+
   return (
-    <div className="px-4 pb-10">
-      <ProfileHeader user={headerUser} loading={loading} />
+    <ProfileSummaryProvider value={contextValue}>
+      <div className="px-4 pb-10">
+        <ProfileHeader user={headerUser} loading={loading} />
 
-      {tabs.length > 0 && (
-        <ProfileTabs tabs={tabs} activeId={activeTab} onChange={handleTabChange} />
-      )}
+        {tabs.length > 0 && (
+          <ProfileTabs tabs={tabs} activeId={activeTab} onChange={handleTabChange} />
+        )}
 
-      {error && (
-        <div className="mt-6 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
-          Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
-        </div>
-      )}
+        {error && (
+          <div className="mt-6 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
+            Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
+          </div>
+        )}
 
-      <section className="mt-6 space-y-4">{children}</section>
-    </div>
+        <section className="mt-6 space-y-4">{children}</section>
+      </div>
+    </ProfileSummaryProvider>
   );
 }

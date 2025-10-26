@@ -2,7 +2,7 @@
 
 import ActivityFilters from "@/components/profile/ActivityFilters";
 import ActivityList from "@/components/profile/ActivityList";
-import useProfileSummary from "@/hooks/useProfileSummar";
+import { useProfileSummaryContext } from "@/context/ProfileSummaryContext";
 import { useMemo, useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -12,13 +12,13 @@ const FILTERS = [
   { id: "month", label: "Bulan ini" },
 ];
 
-export default function AktivitasView({ username }) {
+export default function AktivitasView() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { summary, loading } = useProfileSummaryContext();
 
   const filterParam = searchParams.get("filter") ?? "all";
-  const { summary, loading } = useProfileSummary(username);
   const filters = summary?.activityFilters ?? FILTERS;
 
   const [activeFilter, setActiveFilter] = useState(filterParam);

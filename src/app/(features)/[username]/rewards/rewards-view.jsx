@@ -1,10 +1,10 @@
 "use client";
 
 import RewardsPanel from "@/components/profile/rewards/RewardsPanel";
-import useProfileSummary from "@/hooks/useProfileSummar";
+import { useProfileSummaryContext } from "@/context/ProfileSummaryContext";
 
 export default function RewardsView({ username }) {
-  const { summary, loading, error, refetch } = useProfileSummary(username);
+  const { summary, loading, error, refetch } = useProfileSummaryContext();
 
   return (
     <div className="space-y-4">

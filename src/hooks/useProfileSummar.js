@@ -16,6 +16,7 @@ export default function useProfileSummary(username) {
   const [error, setError] = useState(null);
 
   const loadProfile = useCallback(async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (username) {

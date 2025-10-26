@@ -47,7 +47,8 @@ export default function RewardsPanel({ rewards, loading, onRefresh, username }) 
       setRedeeming(true);
       try {
         const response = await apiClient.post(
-          `/vouchers/${voucher.id ?? voucher.slug}/redeem`
+          `/vouchers/${voucher.id ?? voucher.slug}/redeem`,
+          username ? { username } : {}
         );
         const redemption = response.data?.data ?? response.data ?? null;
         await refreshRewards();
@@ -101,15 +102,21 @@ export default function RewardsPanel({ rewards, loading, onRefresh, username }) 
         <h3 className="text-sm font-semibold text-gray-900">
           Voucher tersedia
         </h3>
-        <div className="space-y-3">
-          {available.map((voucher) => (
-            <RewardVoucherCard
-              key={voucher.id}
-              voucher={voucher}
-              onRedeem={setSelectedVoucher}
-            />
-          ))}
-        </div>
+        {available.length > 0 ? (
+          <div className="space-y-3">
+            {available.map((voucher) => (
+              <RewardVoucherCard
+                key={voucher.id}
+                voucher={voucher}
+                onRedeem={setSelectedVoucher}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-black/10 bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
+            Belum ada voucher tersedia untuk saat ini.
+          </div>
+        )}
       </section>
 
       <RewardHistoryList
