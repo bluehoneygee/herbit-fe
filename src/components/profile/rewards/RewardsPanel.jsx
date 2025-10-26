@@ -6,7 +6,7 @@ import RewardVoucherCard from "./RewardVoucherCard";
 import RewardHistoryList from "./RewardHistoryList";
 import apiClient from "@/lib/apiClient";
 
-export default function RewardsPanel({ rewards, loading, onRefresh }) {
+export default function RewardsPanel({ rewards, loading, onRefresh, username }) {
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [redeemSuccess, setRedeemSuccess] = useState(null);
   const [redeemError, setRedeemError] = useState(null);
@@ -26,6 +26,7 @@ export default function RewardsPanel({ rewards, loading, onRefresh }) {
   const refreshRewards = useCallback(async () => {
     try {
       const response = await apiClient.get("/vouchers/summary", {
+        params: username ? { username } : undefined,
         headers: { "Cache-Control": "no-cache" },
       });
       const summary = response.data?.data ?? response.data ?? null;
@@ -37,7 +38,7 @@ export default function RewardsPanel({ rewards, loading, onRefresh }) {
     } catch (error) {
       console.error("refreshRewards failed:", error);
     }
-  }, []);
+  }, [username]);
 
   const handleRedeem = useCallback(
     async (voucher) => {
@@ -74,7 +75,7 @@ export default function RewardsPanel({ rewards, loading, onRefresh }) {
         setRedeeming(false);
       }
     },
-    [redeeming, refreshRewards]
+    [redeeming, refreshRewards, onRefresh]
   );
 
   if (!rewards && !loading) {
@@ -83,6 +84,10 @@ export default function RewardsPanel({ rewards, loading, onRefresh }) {
         Rewards belum tersedia.
       </div>
     );
+  }
+
+  if (loading) {
+    return <RewardsSkeleton />;
   }
 
   return (
@@ -107,7 +112,22 @@ export default function RewardsPanel({ rewards, loading, onRefresh }) {
         </div>
       </section>
 
-      <RewardHistoryList history={history} />
+      <RewardHistoryList
+        history={history}
+        onSelect={(item) =>
+          setRedeemSuccess((prev) => ({
+            ...(prev ?? {}),
+            ...item,
+            name: item.name ?? prev?.name,
+            image:
+              item.image ??
+              item.imageUrl ??
+              prev?.image ??
+              prev?.imageUrl ??
+              "/sample-voucher.jpg",
+          }))
+        }
+      />
 
       <RedeemDialog
         voucher={selectedVoucher}
@@ -196,6 +216,57 @@ function RedeemDialog({ voucher, onClose, onConfirm, loading, error }) {
             </p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RewardsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="rounded-[28px] border border-black/10 bg-white p-6 shadow-sm">
+        <div className="h-4 w-24 rounded bg-gray-200" />
+        <div className="mt-4 h-3 w-32 rounded bg-gray-200" />
+        <div className="mt-2 h-3 w-20 rounded bg-gray-200" />
+        <div className="mt-4 h-10 w-32 rounded-full bg-gray-100" />
+      </div>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="h-4 w-32 rounded bg-gray-200" />
+          <div className="h-3 w-16 rounded bg-gray-200" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 2 }).map((_, idx) => (
+            <div
+              key={`voucher-skeleton-${idx}`}
+              className="flex items-center gap-4 rounded-2xl border border-black/10 bg-white p-4 shadow-sm"
+            >
+              <div className="h-12 w-12 rounded-2xl bg-gray-100" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-32 rounded bg-gray-200" />
+                <div className="h-3 w-20 rounded bg-gray-200" />
+              </div>
+              <div className="h-8 w-24 rounded-full bg-gray-100" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="space-y-3">
+        <div className="h-4 w-28 rounded bg-gray-200" />
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <div
+            key={`history-skeleton-${idx}`}
+            className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
+          >
+            <div className="h-10 w-10 rounded-2xl bg-gray-100" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 w-32 rounded bg-gray-200" />
+              <div className="h-2 w-20 rounded bg-gray-200" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

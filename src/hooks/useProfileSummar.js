@@ -10,16 +10,23 @@ const DEFAULT_SUMMARY = {
   activities: [],
 };
 
-export default function useProfileSummary() {
+export default function useProfileSummary(username) {
   const [summary, setSummary] = useState(DEFAULT_SUMMARY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const loadProfile = useCallback(async () => {
     try {
-      const response = await axios.get("/api/profile/summary", {
-        headers: { "Cache-Control": "no-cache" },
-      });
+      const params = new URLSearchParams();
+      if (username) {
+        params.set("username", username);
+      }
+      const response = await axios.get(
+        `/api/profile/summary${params.toString() ? `?${params.toString()}` : ""}`,
+        {
+          headers: { "Cache-Control": "no-cache" },
+        }
+      );
       const data = response.data ?? {};
       setSummary({
         ...DEFAULT_SUMMARY,
@@ -40,7 +47,7 @@ export default function useProfileSummary() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [username]);
 
   useEffect(() => {
     loadProfile();

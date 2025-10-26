@@ -160,13 +160,14 @@ export default function ActivityList({ items = [], loading = false }) {
         {Array.from({ length: 3 }).map((_, i) => (
           <li
             key={`placeholder-${i}`}
-            className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
+            className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
           >
-            <div className="h-10 w-10 rounded-2xl bg-gray-100" />
+            <div className="h-10 w-10 rounded-2xl bg-gray-100 animate-pulse" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 w-32 rounded bg-gray-100" />
-              <div className="h-2 w-24 rounded bg-gray-100" />
+              <div className="h-3 w-32 rounded bg-gray-100 animate-pulse" />
+              <div className="h-2 w-24 rounded bg-gray-100 animate-pulse" />
             </div>
+            <div className="h-2 w-12 rounded bg-gray-100 animate-pulse" />
           </li>
         ))}
       </ul>
