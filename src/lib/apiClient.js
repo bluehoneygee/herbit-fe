@@ -1,24 +1,16 @@
+// src/lib/api.js (atau lokasi file kamu)
 import axios from "axios";
 
-const baseURL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "";
+const baseURL = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5001/api"
+).replace(/\/+$/, "");
 
 export const apiClient = axios.create({
   baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: false,
+  headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
-
-const rawToken = process.env.NEXT_PUBLIC_MOCK_TOKEN?.trim();
-const mockToken = rawToken
-  ? rawToken.startsWith("Bearer ")
-    ? rawToken
-    : `Bearer ${rawToken}`
-  : null;
-if (mockToken) {
-  apiClient.defaults.headers.common.Authorization = mockToken;
-}
 
 export default apiClient;
