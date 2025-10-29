@@ -25,9 +25,24 @@ export default function HomePage() {
     const total = progress?.total ?? 0;
     const completed = progress?.completed ?? 0;
     const percent = clampNumber(progress?.percent ?? 0);
-    const title =
-      percent >= 100 ? "Semua task selesai! 🎉" : "Hampir selesai! 🔥";
-    const subtitle = `${completed} dari ${total} task selesai`;
+    const { title, subtitle } = (() => {
+      if (!total || percent === 0) {
+        return {
+          title: "Belum mulai hari ini?",
+          subtitle: "Ayo mulai, voucher udah siap nungguin kamu",
+        };
+      }
+      if (percent >= 100) {
+        return {
+          title: "Semua task selesai!",
+          subtitle: `${completed} dari ${total} task selesai`,
+        };
+      }
+      return {
+        title: "Hampir selesai!",
+        subtitle: `${completed} dari ${total} task selesai`,
+      };
+    })();
     return { total, completed, percent, title, subtitle };
   }, [progress]);
 
