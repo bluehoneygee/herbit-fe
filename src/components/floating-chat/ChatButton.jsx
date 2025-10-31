@@ -300,51 +300,67 @@ const getFaqIcon = (category) => {
 }
 
 function ChatView({ setView, handleClose }) {
-    const [messages, setMessages] = useState([
-        { id: 1, text: "Halo, saya ada pertanyaan tentang Eco Enzyme!", sender: 'user' },
-        { id: 2, text: "Tentu! Senang membantu. Silakan sampaikan pertanyaan Anda.", sender: 'ai' },
-    ]);
-    const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const chatEndRef = useRef(null);
+  const [messages, setMessages] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("chatMessages");
+      return saved ? JSON.parse(saved) : [
+        { id: 1, text: "Halo, saya ada pertanyaan tentang Eco Enzyme!", sender: "user" },
+        { id: 2, text: "Tentu! Senang membantu. Silakan sampaikan pertanyaan Anda.", sender: "ai" },
+      ];
+    }
+    return [];
+  });
 
-    // Fungsi untuk mensimulasikan pengiriman pesan ke backend (yang akan Anda ganti dengan Gemini API)
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const chatEndRef = useRef(null);
 
-        const userMessage = input.trim();
-        setMessages(prev => [...prev, { id: Date.now(), text: userMessage, sender: 'user' }]);
-        setInput('');
-        setIsLoading(true);
+  // 🧠 Simpan pesan setiap kali messages berubah
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("chatMessages", JSON.stringify(messages));
+    }
+  }, [messages]);
 
-        try {
-            // Memanggil API Route Next.js yang sudah dikonfigurasi untuk Gemini
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: userMessage }),
-            });
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
-            if (!response.ok) {
-                throw new Error('Gagal mendapatkan respons dari AI.');
-            }
+    const userMessage = input.trim();
+    setMessages((prev) => [...prev, { id: Date.now(), text: userMessage, sender: "user" }]);
+    setInput("");
+    setIsLoading(true);
 
-            const data = await response.json();
-            const aiReply = data.reply || 'Terjadi kesalahan saat memproses jawaban AI.';
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: userMessage }),
+      });
 
-            setMessages(prev => [...prev, { id: Date.now() + 1, text: aiReply, sender: 'ai' }]);
+      if (!response.ok) throw new Error("Gagal mendapatkan respons dari AI.");
 
-        } catch (error) {
-            console.error("Error fetching AI response:", error);
-            setMessages(prev => [...prev, { id: Date.now() + 1, text: 'Maaf, terjadi masalah koneksi atau server AI.', sender: 'ai' }]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      const data = await response.json();
+      let aiText = "";
+      if (typeof data.reply === "string") aiText = data.reply;
+      else if (Array.isArray(data.reply)) aiText = data.reply.join("\n");
+      else if (data.reply && typeof data.reply === "object") aiText = JSON.stringify(data.reply, null, 2);
+      else aiText = String(data.reply || "");
 
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+      setMessages((prev) => [...prev, { id: Date.now() + 1, text: aiText, sender: "ai" }]);
+    } catch (error) {
+      console.error("Error fetching AI response:", error);
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, text: "Maaf, terjadi masalah koneksi atau server AI.", sender: "ai" },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
     return (
         <div className="flex flex-col h-full bg-white">
@@ -366,12 +382,14 @@ function ChatView({ setView, handleClose }) {
                     <div key={msg.id} className={cn("flex", { "justify-end": msg.sender === 'user', "justify-start": msg.sender === 'ai' })}>
                         <div className={cn("p-3 rounded-xl max-w-[80%] text-sm", {
         "bg-purple-600 text-white rounded-br-none": msg.sender === 'user',
-        "bg-gray-100 text-gray-800 rounded-tl-none prose prose-sm max-w-none whitespace-pre-wrap": msg.sender === 'ai',
+       "bg-gray-100 text-gray-800 rounded-tl-none max-w-none": msg.sender === 'ai',
+
     })}>
                             {msg.sender === 'ai' ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {msg.text}
-            </ReactMarkdown>
+  {typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)}
+</ReactMarkdown>
+
         ) : (
             msg.text 
         )}
@@ -448,7 +466,7 @@ function MainView({ setView, setSelectedCategory, handleClose }) {
         <div className="flex flex-col h-full bg-white">
             <div className="flex justify-between items-start p-4 bg-amber-400 ">
                 <div>
-                    <h2 className="text-xl font-extrabold text-gray-900">Halo!</h2>
+                    <h2 className="text-xl font-extrabold text-gray-900">Helooow!</h2>
                     <p className="text-sm text-gray-700">Temukan jawaban Anda di sini.</p>
                 </div>
                 <button 
