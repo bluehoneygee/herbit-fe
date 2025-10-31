@@ -108,9 +108,6 @@ export default function GameBoard() {
         setSessionId(startRes.session._id);
 
         const me = await getMe();
-        console.log("[INIT me]", me); // ← Log full me
-        console.log("[INIT me.user]", me.user); // ← Log me.user
-        console.log("[INIT me.data]", me.data); // ← Log me.data jika ada
         setServerStreak(me.user.sortingStreak || 0);
         setTotalPoints(me.user.totalPoints || 0);
         console.log("[INIT me]", me.user);
