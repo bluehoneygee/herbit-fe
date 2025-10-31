@@ -1,0 +1,26 @@
+"use client";
+
+import RewardsPanel from "@/components/profile/rewards/RewardsPanel";
+import { useProfileSummaryContext } from "@/context/ProfileSummaryContext";
+
+export default function RewardsView({ username }) {
+  const { summary, loading, error, refetch } = useProfileSummaryContext();
+
+  return (
+    <div className="space-y-4">
+      {error && (
+        <div className="rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
+          Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
+        </div>
+      )}
+
+      <RewardsPanel
+        rewards={summary?.rewards}
+        vouchers={summary?.vouchers}
+        loading={loading}
+        onRefresh={refetch}
+        username={username}
+      />
+    </div>
+  );
+}

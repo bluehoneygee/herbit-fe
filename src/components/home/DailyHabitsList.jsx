@@ -1,7 +1,11 @@
 "use client";
 
-export default function DailyHabitsList({ items = [], loading = false }) {
-  const limitedItems = Array.isArray(items) ? items.slice(0, 2) : [];
+export default function DailyHabitsList({
+  items = [],
+  loading = false,
+  scrollable = false,
+}) {
+  const limitedItems = Array.isArray(items) ? items.slice(0, 3) : [];
 
   if (loading) {
     return (
@@ -31,8 +35,15 @@ export default function DailyHabitsList({ items = [], loading = false }) {
     );
   }
 
+  const Container = scrollable ? "div" : "div";
+  const containerProps = scrollable
+    ? {
+        className: "space-y-3 overflow-y-auto pr-1 overscroll-contain",
+      }
+    : { className: "space-y-3" };
+
   return (
-    <div className="space-y-3">
+    <Container {...containerProps}>
       {limitedItems.map((t) => {
         const done = Boolean(t?.done);
         return (
@@ -53,25 +64,12 @@ export default function DailyHabitsList({ items = [], loading = false }) {
                   done ? "text-[#FEA800]" : "text-gray-500"
                 }`}
               >
-                {t.status ?? (done ? "Selesai" : "Belum dikerjakan")}
+                {t.status ?? (done ? "Selesai" : "0/1")}
               </p>
             </div>
-
-            <button
-              type="button"
-              aria-label={done ? "Sudah checklist" : "Checklist"}
-              className={[
-                "ml-3 h-9 w-9 rounded-2xl grid place-items-center border shadow-sm",
-                done
-                  ? "bg-[#FEA800] border-[#FEA800] text-white"
-                  : "bg-white border-black/10 text-[#FEA800]",
-              ].join(" ")}
-            >
-              {done ? "✓" : "+"}
-            </button>
           </div>
         );
       })}
-    </div>
+    </Container>
   );
 }

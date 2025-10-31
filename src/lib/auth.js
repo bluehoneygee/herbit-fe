@@ -1,5 +1,5 @@
 // src/lib/auth.js
-import { apiClient } from "./api";
+import apiClient from "./apiClient";
 
 export async function loginApi(email, password) {
   const { data } = await apiClient.post("/auth/login", { email, password });

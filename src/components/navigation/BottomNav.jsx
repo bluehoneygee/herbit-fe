@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MaskIcon from "@/components/ui/MaskIcon";
+import { useEffect, useMemo, useState } from "react";
 
 export default function BottomNav({
   tabs,
@@ -11,11 +12,85 @@ export default function BottomNav({
   className = "",
 }) {
   const pathname = usePathname();
+  const reservedSegments = new Set([
+    "",
+    "login",
+    "register",
+    "forgot-password",
+    "reset-password",
+  ]);
 
-  const isActive = (href, matchPrefix = true) => {
+  const username = useMemo(() => {
+    if (!pathname) return null;
+    const match = pathname.match(/^\/([^/]+)/);
+    const candidate = match?.[1] ?? null;
+    if (!candidate || reservedSegments.has(candidate)) {
+      return null;
+    }
+    return candidate;
+  }, [pathname]);
+
+  const [profileHref, setProfileHref] = useState(null);
+
+  useEffect(() => {
+    if (username) {
+      setProfileHref(`/${username}/aktivitas`);
+      return undefined;
+    }
+
+    let cancelled = false;
+    async function fetchProfileHref() {
+      try {
+        const response = await fetch("/api/summary/home", {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const fallbackUsername = data?.user?.username ?? null;
+        if (!cancelled && fallbackUsername) {
+          setProfileHref(`/${fallbackUsername}/aktivitas`);
+        }
+      } catch (error) {
+        // ignore fetch errors silently
+      }
+    }
+
+    fetchProfileHref();
+    return () => {
+      cancelled = true;
+    };
+  }, [username]);
+
+  const isActive = ({ href, matchPrefix = true, matchPattern }) => {
+    if (matchPattern && pathname) {
+      const pattern =
+        typeof matchPattern === "string"
+          ? new RegExp(matchPattern, "i")
+          : matchPattern;
+      return pattern.test(pathname);
+    }
     if (href === "/") return pathname === "/";
     return matchPrefix ? pathname?.startsWith(href) : pathname === href;
   };
+
+  const resolvedTabs = useMemo(() => {
+    return tabs.map((tab) => {
+      if (tab.key === "profile") {
+        const resolvedHref =
+          profileHref ?? tab.href ?? pathname ?? "/";
+        const disabled = !profileHref;
+
+        return {
+          ...tab,
+          href: resolvedHref,
+          matchPrefix: false,
+          disabled,
+        };
+      }
+      return tab;
+    });
+  }, [tabs, profileHref, pathname]);
 
   return (
     <nav
@@ -64,37 +139,55 @@ export default function BottomNav({
         />
 
         <ul className="relative z-10 flex w-full items-center justify-between">
-          {tabs.map(({ key, href, label, icon, matchPrefix = true }) => {
-            const active = isActive(href, matchPrefix);
-            return (
-              <li key={key} className="flex flex-col items-center gap-1">
-                <Link
-                  href={href}
-                  aria-label={label}
-                  aria-current={active ? "page" : undefined}
-                  className="
-                    flex flex-col items-center gap-1
-                    transition-transform duration-200 ease-out hover:scale-[1.05]
-                  "
-                  style={{ transform: active ? "scale(1.06)" : "scale(1)" }}
-                >
-                  <MaskIcon
-                    name={icon}
-                    size={24}
-                    color={active ? activeColor : inactiveColor}
-                  />
-                  <span
-                    className={`text-[12px] leading-none ${
-                      active ? "font-medium" : ""
-                    }`}
-                    style={{ color: active ? activeColor : inactiveColor }}
+          {resolvedTabs.map(
+            ({
+              key,
+              href,
+              label,
+              icon,
+              matchPrefix = true,
+              matchPattern,
+              disabled = false,
+            }) => {
+              const active = !disabled
+                ? isActive({ href, matchPrefix, matchPattern })
+                : false;
+              const linkClassName = [
+                "flex flex-col items-center gap-1",
+                "transition-transform duration-200 ease-out hover:scale-[1.05]",
+                disabled ? "pointer-events-none opacity-60" : "",
+              ]
+                .filter(Boolean)
+                .join(" ");
+              return (
+                <li key={key} className="flex flex-col itemscenter gap-1">
+                  <Link
+                    href={href}
+                    aria-label={label}
+                    aria-current={active ? "page" : undefined}
+                    aria-disabled={disabled || undefined}
+                    tabIndex={disabled ? -1 : 0}
+                    className={linkClassName}
+                    style={{ transform: active ? "scale(1.06)" : "scale(1)" }}
                   >
-                    {label}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+                    <MaskIcon
+                      name={icon}
+                      size={24}
+                      color={active ? activeColor : inactiveColor}
+                    />
+                    <span
+                      className={`text-[12px] leading-none ${
+                        active ? "font-medium" : ""
+                      }`}
+                      style={{ color: active ? activeColor : inactiveColor }}
+                    >
+                      {label}
+                    </span>
+                  </Link>
+                </li>
+              );
+            }
+          )}
         </ul>
       </div>
     </nav>

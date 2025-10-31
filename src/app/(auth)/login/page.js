@@ -6,7 +6,7 @@ import { useState } from "react";
 
 const SEEN_KEY = "herbit_onboarding_v1";
 const API = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"
 ).replace(/\/+$/, "");
 
 export default function LoginPage() {

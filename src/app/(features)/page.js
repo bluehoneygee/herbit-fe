@@ -20,14 +20,30 @@ export default function HomePage() {
     rewardsBanners = [],
     habitsToday = [],
   } = summary ?? {};
+  console.log("Home summary data:", summary);
 
   const progressData = useMemo(() => {
     const total = progress?.total ?? 0;
     const completed = progress?.completed ?? 0;
     const percent = clampNumber(progress?.percent ?? 0);
-    const title =
-      percent >= 100 ? "Semua task selesai! 🎉" : "Hampir selesai! 🔥";
-    const subtitle = `${completed} dari ${total} task selesai`;
+    const { title, subtitle } = (() => {
+      if (!total || percent === 0) {
+        return {
+          title: "Belum mulai hari ini?",
+          subtitle: "Ayo mulai, voucher udah siap nungguin kamu",
+        };
+      }
+      if (percent >= 100) {
+        return {
+          title: "Semua task selesai!",
+          subtitle: `${completed} dari ${total} task selesai`,
+        };
+      }
+      return {
+        title: "Hampir selesai!",
+        subtitle: `${completed} dari ${total} task selesai`,
+      };
+    })();
     return { total, completed, percent, title, subtitle };
   }, [progress]);
 
@@ -40,14 +56,24 @@ export default function HomePage() {
       };
     }
 
-    const info = `${ecoenzym.daysRemaining ?? 0} hari lagi • Bulan ke-${
-      ecoenzym.monthNumber ?? "-"
-    }`;
+    const batchNumber = ecoenzym.batchNumber ?? null;
+    const batch =
+      typeof batchNumber === "number"
+        ? `Eco Enzym Batch#${batchNumber}`
+        : "Eco Enzym";
+
+    const daysRemaining = Number.isFinite(ecoenzym.daysRemaining)
+      ? ecoenzym.daysRemaining
+      : null;
+    const info =
+      daysRemaining !== null
+        ? `${daysRemaining} hari tersisa`
+        : "Sedang berjalan";
 
     return {
-      batch: ecoenzym.batch ?? "Eco Enzym",
+      batch,
       info,
-      progress: ecoenzym.progressPercent ?? 0,
+      progress: ecoenzym.progress ?? 0,
     };
   }, [ecoenzym]);
 
@@ -57,9 +83,9 @@ export default function HomePage() {
         <div className="h-[420px] w-full rounded-b-[80px] bg-transparent" />
       </div>
 
-      <HeaderHero user={loading ? null : user} />
+      <HeaderHero user={user} loading={loading} />
 
-      <section className="mt-[12px] space-y-3 pb-6">
+      <section className="mt-[12px] space-y-6 pb-6">
         {error && (
           <div className="mx-4 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
             Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
@@ -71,7 +97,7 @@ export default function HomePage() {
         </div>
 
         <div className="mx-4">
-          <RewardsBanner items={rewardsBanners} />
+          <RewardsBanner items={rewardsBanners} loading={loading} />
         </div>
 
         <div className="mx-4">
@@ -79,10 +105,11 @@ export default function HomePage() {
             percent={progressData.percent}
             title={progressData.title}
             subtitle={progressData.subtitle}
+            loading={loading}
           />
         </div>
 
-        <div className="space-y-1 px-4">
+        <div className="space-y-3 px-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-900">
               Eco-enzym Aktif
@@ -95,10 +122,11 @@ export default function HomePage() {
             batch={ecoData.batch}
             info={ecoData.info}
             progress={ecoData.progress}
+            loading={loading}
           />
         </div>
 
-        <div className="space-y-1 px-4">
+        <div className="space-y-3 px-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-900">
               Daily Habits
@@ -107,7 +135,9 @@ export default function HomePage() {
               LIHAT SEMUA
             </button>
           </div>
-          <DailyHabitsList items={habitsToday} loading={loading} />
+          <div className="max-h-[150px] overflow-y-auto overscroll-contain pr-1 ">
+            <DailyHabitsList items={habitsToday} loading={loading} />
+          </div>
         </div>
       </section>
     </main>

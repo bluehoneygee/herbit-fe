@@ -2,7 +2,26 @@
 
 import { clampNumber } from "@/lib/utils";
 
-export default function ProgressCard({ percent = 60, title, subtitle }) {
+export default function ProgressCard({
+  percent = 0,
+  title,
+  subtitle,
+  loading = false,
+}) {
+  if (loading) {
+    return (
+      <div className="rounded-2xl bg-[#F3C45B] p-4 shadow-sm animate-pulse">
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-full bg-[#F7D98A]" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-32 rounded bg-[#F7D98A]" />
+            <div className="h-3 w-48 max-w-full rounded bg-[#F7D98A]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const p = clampNumber(percent);
 
   const size = 44;

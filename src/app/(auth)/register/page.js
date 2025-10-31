@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
 const SEEN_KEY = "herbit_onboarding_v1";
-const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
+const API = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"
+).replace(/\/+$/, "");
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,18 +52,22 @@ export default function RegisterPage() {
           email: email.trim(),
           username: username.trim(),
           password,
-          confirm_password: confirm, 
+          confirm_password: confirm,
         }),
       });
 
       const ct = res.headers.get("content-type") || "";
-      const data = ct.includes("application/json") ? await res.json().catch(() => ({})) : null;
+      const data = ct.includes("application/json")
+        ? await res.json().catch(() => ({}))
+        : null;
 
       if (!res.ok) {
         const msg =
           data?.message ||
           data?.error?.details ||
-          (res.status === 409 ? "Email atau username sudah dipakai." : `Gagal register (HTTP ${res.status})`);
+          (res.status === 409
+            ? "Email atau username sudah dipakai."
+            : `Gagal register (HTTP ${res.status})`);
         throw new Error(msg);
       }
 
@@ -91,13 +97,16 @@ export default function RegisterPage() {
 
         <h1 className="text-2xl font-semibold mb-2">Register</h1>
         <p className="text-sm text-gray-500 mb-6">
-          Dengan mendaftar, kamu setuju pada <span className="font-medium">Terms of Use</span> dan{" "}
+          Dengan mendaftar, kamu setuju pada{" "}
+          <span className="font-medium">Terms of Use</span> dan{" "}
           <span className="font-medium">Privacy Policy</span> kami.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="email" className="text-sm text-black">Email</label>
+            <label htmlFor="email" className="text-sm text-black">
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -110,7 +119,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="username" className="text-sm text-black">Username</label>
+            <label htmlFor="username" className="text-sm text-black">
+              Username
+            </label>
             <input
               id="username"
               type="text"
@@ -123,7 +134,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="text-sm text-black">Password</label>
+            <label htmlFor="password" className="text-sm text-black">
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -137,7 +150,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="confirm" className="text-sm text-black">Confirm Password</label>
+            <label htmlFor="confirm" className="text-sm text-black">
+              Confirm Password
+            </label>
             <input
               id="confirm"
               type="password"

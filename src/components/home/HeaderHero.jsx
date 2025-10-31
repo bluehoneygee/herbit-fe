@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import CalendarOverlay from "./CalendarOverlay";
 
@@ -78,7 +79,8 @@ function BellIcon({ size = 20, color = "#111827" }) {
   );
 }
 
-export default function HeaderHero({ user }) {
+export default function HeaderHero({ user, loading = false }) {
+  const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarButtonRef = useRef(null);
   const calendarPanelRef = useRef(null);
@@ -192,8 +194,38 @@ export default function HeaderHero({ user }) {
     });
   }, [updateCalendarPosition]);
 
-  const displayName = user?.name ?? "Teman Herbit";
+  const handleNotificationClick = useCallback(() => {
+    router.push("/notification");
+  }, [router]);
+
+  if (loading || !user) {
+    return (
+      <header
+        className="relative z-40"
+        style={{ paddingTop: "calc(24px + env(safe-area-inset-top))" }}
+      >
+        <div className="mx-4 flex items-center justify-between">
+          <div className="h-9 w-9 rounded-full bg-gray-200 shadow-sm animate-pulse" />
+          <div className="h-9 w-9 rounded-full bg-gray-200 shadow-sm animate-pulse" />
+        </div>
+        <div className="mx-4 mt-6 flex items-start gap-3">
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-40 rounded bg-gray-200 animate-pulse" />
+            <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
+            <div className="h-3 w-32 rounded bg-gray-200 animate-pulse" />
+          </div>
+          <div className="h-14 w-14 shrink-0 rounded-full bg-gray-200 shadow animate-pulse" />
+        </div>
+      </header>
+    );
+  }
+
+  const displayName =
+    user?.name ?? user?.username ?? user?.email ?? "Teman Herbit";
   const points =
+    typeof user?.totalPoints === "number"
+      ? user.totalPoints
+      : typeof user?.total_points === "number"
     typeof user?.totalPoints === "number"
       ? user.totalPoints
       : typeof user?.total_points === "number"
@@ -202,20 +234,23 @@ export default function HeaderHero({ user }) {
       ? user.points
       : 0;
   const avatar = (() => {
-    if (user?.photoUrl) return user.photoUrl;
-    if (user?.photo_url) return user.photo_url;
-    const source = user?.name ?? user?.username ?? user?.email ?? "Teman Herbit";
+    if (user?.photo_url ?? user?.photoUrl) {
+      return user.photo_url ?? user.photoUrl;
+    }
+    const source =
+      user?.name ?? user?.username ?? user?.email ?? "Teman Herbit";
     const cleaned = source.replace(/[^a-zA-Z\s]/g, " ").trim();
-    const initials = cleaned
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "T";
+    const initials =
+      cleaned
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || "T";
     const params = new URLSearchParams({
       name: initials,
-      background: "FACC15",
+      background: "FEA800",
       color: "ffffff",
       size: "128",
     });
@@ -268,6 +303,7 @@ export default function HeaderHero({ user }) {
           <button
             aria-label="Notifikasi"
             className="p-0 m-0 bg-transparent border-0 inline-flex items-center justify-center cursor-pointer"
+            onClick={handleNotificationClick}
             style={{ lineHeight: 0 }}
             type="button"
           >
