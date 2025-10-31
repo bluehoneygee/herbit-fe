@@ -25,11 +25,8 @@ export default function RewardHistoryList({ history = [], onSelect }) {
 
 function HistoryCard({ item, onSelect }) {
   const redeemedAt = item.redeemedAt ?? item.redeemed_at;
-  const dateLabel = redeemedAt ? formatDateLabel(redeemedAt) : "Tanggal tidak diketahui";
-  const pointsLabel =
-    typeof item.points === "number" && item.points > 0
-      ? `-${item.points} poin`
-      : null;
+  const dateLabel = formatDateLabel(redeemedAt);
+  const pointsLabel = `-${item.points} poin`;
 
   return (
     <button
@@ -39,8 +36,8 @@ function HistoryCard({ item, onSelect }) {
     >
       <div className="mr-3 h-10 w-10 overflow-hidden rounded-2xl">
         <Image
-          src={item.image ?? "/icons/gift.svg"}
-          alt={item.name ?? "Voucher"}
+          src={item.image}
+          alt={item.name}
           width={40}
           height={40}
           className="h-full w-full object-cover"
@@ -50,7 +47,7 @@ function HistoryCard({ item, onSelect }) {
 
       <div className="flex-1 min-w-0">
         <p className="truncate text-sm font-semibold text-gray-900">
-          {item.name ?? "Voucher"}
+          {item.name}
         </p>
         <p className="text-xs text-gray-500">{dateLabel}</p>
       </div>

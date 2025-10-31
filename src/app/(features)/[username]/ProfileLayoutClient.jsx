@@ -7,12 +7,17 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 import useProfileSummary from "@/hooks/useProfileSummar";
 import { ProfileSummaryProvider } from "@/context/ProfileSummaryContext";
 
+const DEFAULT_TABS = [
+  { id: "activities", label: "Aktivitas" },
+  { id: "rewards", label: "Rewards & Vouchers" },
+];
+
 export default function ProfileLayoutClient({ params, children }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { summary, loading, error, refetch } = useProfileSummary(params.username);
+  const { summary, loading, error, refetch } = useProfileSummary();
 
-  const tabs = summary?.tabs ?? [];
+  const tabs = summary?.tabs?.length ? summary.tabs : DEFAULT_TABS;
   const activeTab = useMemo(() => {
     if (pathname?.endsWith("/aktivitas")) return "activities";
     if (pathname?.endsWith("/rewards")) return "rewards";
@@ -40,7 +45,11 @@ export default function ProfileLayoutClient({ params, children }) {
         <ProfileHeader user={headerUser} loading={loading} />
 
         {tabs.length > 0 && (
-          <ProfileTabs tabs={tabs} activeId={activeTab} onChange={handleTabChange} />
+          <ProfileTabs
+            tabs={tabs}
+            activeId={activeTab}
+            onChange={handleTabChange}
+          />
         )}
 
         {error && (

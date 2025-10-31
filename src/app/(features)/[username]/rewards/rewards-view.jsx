@@ -16,6 +16,7 @@ export default function RewardsView({ username }) {
 
       <RewardsPanel
         rewards={summary?.rewards}
+        vouchers={summary?.vouchers}
         loading={loading}
         onRefresh={refetch}
         username={username}

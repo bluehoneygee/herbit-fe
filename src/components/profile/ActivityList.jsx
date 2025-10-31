@@ -184,31 +184,37 @@ export default function ActivityList({ items = [], loading = false }) {
 
   return (
     <ul className="space-y-3">
-      {items.map((activity) => (
-        <li
-          key={activity.id}
-          className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
-        >
-          <ActivityIcon type={activity.type} />
-          <div className="flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-semibold text-gray-900">
-                {renderPrimaryText(activity)}
-              </p>
-              {activity.timeLabel && (
-                <span className="text-xs text-gray-400 whitespace-nowrap">
-                  {activity.timeLabel}
-                </span>
+      {items.map((activity, index) => {
+        const key =
+          activity.id ??
+          activity.code ??
+          `${activity.type ?? "activity"}-${activity.timeLabel ?? index}`;
+        return (
+          <li
+            key={key}
+            className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
+          >
+            <ActivityIcon type={activity.type} />
+            <div className="flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold text-gray-900">
+                  {renderPrimaryText(activity)}
+                </p>
+                {activity.timeLabel && (
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {activity.timeLabel}
+                  </span>
+                )}
+              </div>
+              {activity.description && (
+                <p className="mt-1 text-xs text-gray-500">
+                  {activity.description}
+                </p>
               )}
             </div>
-            {activity.description && (
-              <p className="mt-1 text-xs text-gray-500">
-                {activity.description}
-              </p>
-            )}
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }

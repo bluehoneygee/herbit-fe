@@ -3,15 +3,7 @@ import apiClient from "@/lib/apiClient";
 
 export async function GET(request) {
   try {
-    const username = request.nextUrl.searchParams.get("username") ?? undefined;
-    if (!username) {
-      return NextResponse.json(
-        { error: "username query parameter is required" },
-        { status: 400 }
-      );
-    }
-
-    const endpoint = `/users/${encodeURIComponent(username)}/profile-summary`;
+    const endpoint = "/users/profile-summary";
 
     const cookieHeader = request.headers.get("cookie") ?? undefined;
     const response = await apiClient.get(endpoint, {
@@ -33,9 +25,6 @@ export async function GET(request) {
     const status = error?.response?.status ?? 500;
     const message =
       error?.response?.data?.error ?? "Unable to load profile summary";
-    return NextResponse.json(
-      { error: message },
-      { status }
-    );
+    return NextResponse.json({ error: message }, { status });
   }
 }

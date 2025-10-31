@@ -1,49 +1,85 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { clampNumber } from "@/lib/utils";
 
-export default function RewardsMilestone({ milestone, onClaim }) {
-  if (!milestone) {
+export default function RewardsMilestone({
+  milestone,
+  milestones = [],
+  onClaim,
+}) {
+  const items = useMemo(() => {
+    if (Array.isArray(milestone)) return milestone;
+    if (milestone) return [milestone];
+    if (Array.isArray(milestones)) return milestones;
+    return [];
+  }, [milestone, milestones]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (activeIndex >= items.length) {
+      setActiveIndex(0);
+    }
+  }, [items.length, activeIndex]);
+
+  const goPrev = useCallback(() => {
+    setActiveIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+  }, [items.length]);
+
+  const goNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % items.length);
+  }, [items.length]);
+
+  if (items.length === 0) {
     return null;
   }
 
-  const rawTarget = milestone.daysTarget ?? milestone.progress?.target ?? 30;
+  const activeItem = items[activeIndex];
+  const rawTarget = activeItem.targetDays ?? 0;
   const target = clampNumber(rawTarget, 1, Infinity);
-  const rawCurrent = milestone.daysCurrent ?? milestone.progress?.current ?? 0;
+  const rawCurrent = activeItem.claim?.progressDays ?? 0;
   const current = clampNumber(rawCurrent, 0, target);
   const percent = clampNumber((current / target) * 100);
-  const isCompleted = current >= target;
-  const isClaimed = Boolean(milestone.claimed);
+  const isClaimed = Boolean(
+    activeItem.claim?.claimedAt || (activeItem.claim?.pointsAwarded ?? 0) > 0
+  );
+  const canClaim = Boolean(activeItem.claim?.canClaim);
   const pointsLabel =
-    typeof milestone.ctaPoints === "number"
-      ? `+${milestone.ctaPoints} point`
+    typeof activeItem.pointsReward === "number"
+      ? `+${activeItem.pointsReward} poin`
       : null;
+  const title = activeItem.name ?? "Selamat";
+  const subtitle = isClaimed
+    ? "Reward sudah diklaim"
+    : canClaim
+    ? "Siap klaim!"
+    : current > 0
+    ? "Tetap semangat, tinggal sedikit lagi!"
+    : "Yuk mulai hari ini!";
+  const description = activeItem.description;
+  const ctaLabel = canClaim ? "Klaim sekarang" : "Belum bisa diklaim";
+  const displayImage = activeItem.image;
 
   return (
     <section className="relative overflow-hidden rounded-[20px] border border-[#FACC15] bg-white px-4 py-4 text-gray-900 shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-[#FACC15]/40 bg-white p-1.5">
+        <div className="h-36 w-36 shrink-0 overflow-hidden rounded-full border border-[#FACC15]/40 bg-white p-2">
           <img
-            src={milestone.image ?? "/robot.svg"}
-            alt="Maskot Herbit"
+            src={displayImage}
+            alt={title}
             className="h-full w-full object-contain"
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="flex-1 space-y-1.5">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-[#9A6A2F]">
-            {milestone.title ?? "Selamat"}
+            {title}
           </p>
-          <h2 className="text-xl font-extrabold text-[#3D1B0F]">
-            {milestone.subtitle ?? "Ibu Keren!"}
-          </h2>
-          <p className="text-xs text-gray-700/80">
-            {milestone.description ??
-              "30 hari berturut-turut menyelesaikan minimal satu task. Reward spesial ini hanya untuk Ibu!"}
-          </p>
+          <h2 className="text-xl font-extrabold text-[#3D1B0F]">{subtitle}</h2>
+          <p className="text-xs text-gray-700/80">{description}</p>
+          <ProgressBar current={current} target={target} percent={percent} />
         </div>
       </div>
-
-      <ProgressBar current={current} target={target} percent={percent} />
 
       {isClaimed ? (
         <div className="mt-4 rounded-xl border border-dashed border-[#FACC15] bg-white/80 px-4 py-2.5 text-center text-xs font-semibold text-[#9A6A2F]">
@@ -52,21 +88,56 @@ export default function RewardsMilestone({ milestone, onClaim }) {
       ) : (
         <button
           type="button"
-          onClick={() => onClaim?.()}
-          disabled={!isCompleted}
+          onClick={() => onClaim?.(activeItem)}
+          disabled={!canClaim}
           className={`relative mt-4 inline-flex items-center justify-center rounded-full px-4 py-1.5 text-sm font-semibold text-white shadow transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
-            isCompleted
+            canClaim
               ? "bg-[#4A2D8B] hover:bg-[#3C2374]"
               : "cursor-not-allowed bg-gray-300 text-gray-500"
           }`}
         >
-          {isCompleted ? "Klaim reward" : "Belum bisa diklaim"}
+          {ctaLabel}
           {pointsLabel && (
             <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
               {pointsLabel}
             </span>
           )}
         </button>
+      )}
+
+      {items.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow transition hover:bg-white"
+            aria-label="Milestone sebelumnya"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow transition hover:bg-white"
+            aria-label="Milestone berikutnya"
+          >
+            ›
+          </button>
+          <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-10 flex justify-end gap-1">
+            {items.map((item, index) => (
+              <button
+                key={item.id ?? item.code ?? `dot-${index}`}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Milestone ${index + 1}`}
+                className={`h-2.5 w-2.5 rounded-full transition ${
+                  index === activeIndex ? "bg-[#4A2D8B]" : "bg-gray-300/80"
+                }`}
+                style={{ pointerEvents: "auto" }}
+              />
+            ))}
+          </div>
+        </>
       )}
     </section>
   );
@@ -76,7 +147,7 @@ function ProgressBar({ current, target, percent }) {
   const label = `${Math.min(current, target)}/${target} hari`;
 
   return (
-    <div className="mt-4 space-y-1.5">
+    <div className="mt-2">
       <div className="flex items-center justify-between text-[11px] font-semibold text-gray-700">
         <span>{label}</span>
         <span>{Math.round(percent)}%</span>

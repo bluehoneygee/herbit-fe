@@ -3,29 +3,20 @@
 import { clampNumber } from "@/lib/utils";
 import Image from "next/image";
 
-const BORDER_COLORS = ["#FACC15", "#FACC15", "#FACC15"];
-const DOT_COLORS = ["#FACC15", "#FACC15", "#FACC15"];
+const borderColor = "#FACC15";
 
-export default function RewardVoucherCard({ voucher, onRedeem, index = 0 }) {
+export default function RewardVoucherCard({ voucher, onRedeem }) {
   if (!voucher) return null;
 
   const current = clampNumber(voucher.progress?.current ?? 0, 0, Infinity);
-  const target =
-    voucher.progress?.target ??
-    voucher.pointsRequired ??
-    voucher.points_required ??
-    1;
+  const target = voucher.progress?.target ?? 1;
   const percent = clampNumber((current / target) * 100);
-  const requiredPoints =
-    voucher.pointsRequired ?? voucher.points_required ?? target;
+  const requiredPoints = voucher.pointsRequired;
   const canRedeem = current >= requiredPoints;
-  const borderColor = BORDER_COLORS[index % BORDER_COLORS.length];
-  const dotColor = DOT_COLORS[index % DOT_COLORS.length];
   const progressLabel = `${current}/${target}`;
-  const pointsNeeded = target - current;
 
   return (
-    <div className="relative overflow-hidden rounded-[12px] bg-white shadow-sm">
+    <div className="relative overflow-hidden rounded-[12px] bg-white ">
       <TicketBorder color={borderColor} />
       <div className="relative z-10 px-4 pt-5 pb-3">
         <div className="flex items-start justify-between gap-3 pl-4 pr-4">
@@ -50,7 +41,7 @@ export default function RewardVoucherCard({ voucher, onRedeem, index = 0 }) {
                 {voucher.name}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
-                {voucher.description ?? "Voucher spesial"}
+                {voucher.description}
               </p>
             </div>
           </div>
@@ -67,10 +58,7 @@ export default function RewardVoucherCard({ voucher, onRedeem, index = 0 }) {
           </button>
         </div>
 
-        <div
-          className="mt-4 h-px w-full border-t border-dashed"
-          style={{ borderColor: dotColor }}
-        />
+        <div className="mt-4 h-px w-full border-t border-dashed" />
 
         <div className="flex items-center gap-3 pt-1">
           <div className="relative flex-1">

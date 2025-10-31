@@ -5,12 +5,12 @@ import axios from "axios";
 
 const DEFAULT_SUMMARY = {
   user: null,
-  tabs: [],
-  activityFilters: [],
   activities: [],
+  rewards: { milestone: [] },
+  vouchers: { available: [], history: [] },
 };
 
-export default function useProfileSummary(username) {
+export default function useProfileSummary() {
   const [summary, setSummary] = useState(DEFAULT_SUMMARY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,37 +18,56 @@ export default function useProfileSummary(username) {
   const loadProfile = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (username) {
-        params.set("username", username);
-      }
-      const response = await axios.get(
-        `/api/profile/summary${params.toString() ? `?${params.toString()}` : ""}`,
-        {
-          headers: { "Cache-Control": "no-cache" },
-        }
-      );
+      const response = await axios.get("/api/profile/summary", {
+        headers: { "Cache-Control": "no-cache" },
+      });
       const data = response.data ?? {};
+      const rawMilestone = data?.rewards?.milestone;
+      const milestones = Array.isArray(rawMilestone)
+        ? rawMilestone
+        : rawMilestone
+        ? [rawMilestone]
+        : [];
+      const voucherAvailable =
+        data?.vouchers?.available ??
+        (Array.isArray(data?.vouchers) ? data.vouchers : []);
+      const voucherHistory = data?.vouchers?.history ?? [];
+
       setSummary({
         ...DEFAULT_SUMMARY,
         ...data,
-        activityFilters:
-          data.activityFilters ??
-          data.activity_filters ??
-          DEFAULT_SUMMARY.activityFilters,
+        rewards: {
+          milestone: milestones,
+        },
+        vouchers: {
+          available: voucherAvailable,
+          history: voucherHistory,
+        },
       });
       setError(null);
     } catch (err) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.error ?? err.message
-        : err instanceof Error
-        ? err.message
-        : "Unknown error";
+      let message = "Unknown error";
+      if (axios.isAxiosError(err)) {
+        const payload = err.response?.data?.error;
+        if (typeof payload === "string") {
+          message = payload;
+        } else if (payload && typeof payload === "object") {
+          message =
+            payload.details ??
+            payload.message ??
+            payload.code ??
+            JSON.stringify(payload);
+        } else if (err.message) {
+          message = err.message;
+        }
+      } else if (err instanceof Error && err.message) {
+        message = err.message;
+      }
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [username]);
+  }, []);
 
   useEffect(() => {
     loadProfile();
