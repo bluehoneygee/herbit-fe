@@ -1,4 +1,4 @@
-import DailyTasks from "@/components/tracker/dailytracker";
+import DailyTasks from "@/components/tracker/dailyTracker";
 import Tree from "@/components/tracker/tree";
 import TreeTracker from "@/components/tracker/treeTracker";
 

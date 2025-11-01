@@ -4,7 +4,7 @@ import {
   getDailyTasks,
   completeTask,
   uncheckTask,
-} from "@/lib/dailytracker";
+} from "@/lib/dailyTracker";
 
 export default function DailyTasks() {
   const [tasks, setTasks] = useState([]);
