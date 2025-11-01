@@ -20,7 +20,6 @@ export default function DailyHabitsList({
               <div className="h-3 w-32 rounded bg-gray-200" />
               <div className="h-2.5 w-20 rounded bg-gray-200" />
             </div>
-            <div className="ml-3 h-9 w-9 rounded-2xl border border-black/10 bg-gray-100" />
           </div>
         ))}
       </div>
@@ -56,9 +55,7 @@ export default function DailyHabitsList({
             </div>
 
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">
-                {t.title ?? "Tanpa judul"}
-              </p>
+              <p className="text-sm font-semibold text-gray-900">{t.title}</p>
               <p
                 className={`text-xs ${
                   done ? "text-[#FEA800]" : "text-gray-500"

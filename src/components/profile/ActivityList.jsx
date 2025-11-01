@@ -145,7 +145,7 @@ function renderPrimaryText(activity) {
     return "Aktivitas";
   }
 
-  const type = activity.type ?? "activity";
+  const type = activity.type;
 
   const formatValue = (value, unit = "poin") => {
     if (typeof value !== "number" || value === 0) return null;
@@ -158,11 +158,11 @@ function renderPrimaryText(activity) {
       return "+1 daun hijau";
     case "redeem": {
       const label = formatValue(activity.points, "poin");
-      return label ?? "Penukaran poin";
+      return label ?? "Penukaran poin!";
     }
     case "gain": {
       const label = formatValue(activity.points, "poin");
-      return label ?? "Poin bertambah";
+      return label ?? "Eco-enzym dipanen!";
     }
     case "prepoint": {
       const value =
@@ -172,15 +172,15 @@ function renderPrimaryText(activity) {
           ? activity.pre_points
           : activity.points;
       const label = formatValue(value, "prepoint");
-      return label ?? "Prepoint eco-enzym";
+      return label ?? "Upload progress eco-enzym";
     }
     case "fruit": {
       const label = formatValue(activity.points, "poin");
-      return label;
+      return label ?? "Panen buah pohon";
     }
     case "game": {
       const label = formatValue(activity.points, "poin");
-      return label;
+      return label ?? "Main Game Sorting Sampah";
     }
     case "streak": {
       if (
@@ -203,9 +203,6 @@ function renderPrimaryText(activity) {
       return "Update streak";
     }
     default: {
-      if (typeof activity.metricLabel === "string") {
-        return activity.metricLabel;
-      }
       if (typeof activity.title === "string") {
         return activity.title;
       }
@@ -220,9 +217,10 @@ function normalizeActivity(activity, index = 0) {
     return null;
   }
 
-  const type = activity.type ?? "gain";
-  const time = activity.time ?? activity.timestamp ?? null;
-  const timeLabel = activity.timeLabel ?? formatActivityTime(time);
+  const type = activity.type;
+  const time = activity.time ?? null;
+  const timeLabel = formatActivityTime(activity.time);
+
   const computedPeriods = resolveActivityPeriods(time);
   const incomingPeriods = Array.isArray(activity.periods)
     ? activity.periods
@@ -244,28 +242,22 @@ function normalizeActivity(activity, index = 0) {
       normalized.points =
         typeof activity.points === "number" ? activity.points : 0;
       normalized.title = activity.title ?? "Checklist kebiasaan";
-      normalized.metricLabel =
-        activity.metricLabel ?? "Checklist kebiasaan selesai";
       normalized.description =
-        activity.description ?? "Habit harian kamu sudah ditandai selesai.";
+        activity.description ?? "1 Habit harian kamu sudah ditandai selesai.";
       break;
     }
     case "redeem": {
       normalized.points =
         typeof activity.points === "number" ? activity.points : 0;
-      normalized.metricLabel =
-        activity.metricLabel ?? "Poin ditukar untuk voucher";
       normalized.description =
-        activity.description ?? "Kamu menukar poin untuk hadiah atau voucher.";
+        activity.description ?? "Kamu menukar poin untuk voucher.";
       break;
     }
     case "gain": {
       normalized.points =
         typeof activity.points === "number" ? activity.points : 0;
-      normalized.metricLabel = activity.metricLabel ?? "Poin bertambah";
       normalized.description =
-        activity.description ??
-        "Kamu mendapatkan poin dari aktivitas eco-enzym.";
+        activity.description ?? "Kamu berhasil panen eco-enzym";
       break;
     }
     case "prepoint": {
@@ -282,7 +274,6 @@ function normalizeActivity(activity, index = 0) {
         typeof activity.prePoints === "number"
           ? activity.prePoints
           : prePointValue;
-      normalized.metricLabel = activity.metricLabel ?? "Pre-point eco-enzym";
       normalized.description =
         activity.description ??
         (prePointValue > 0
@@ -294,9 +285,8 @@ function normalizeActivity(activity, index = 0) {
     case "fruit": {
       normalized.points =
         typeof activity.points === "number" ? activity.points : 0;
-      normalized.metricLabel = activity.metricLabel ?? "Panen Tree Fruit";
       normalized.description =
-        activity.description ?? "Proyek Tree Fruit memberikan tambahan poin.";
+        activity.description ?? "Kamu berhasil panen buah pohon ";
       normalized.title = activity.title ?? "Tree Fruit";
       break;
     }
@@ -307,11 +297,8 @@ function normalizeActivity(activity, index = 0) {
         typeof activity.dayBucket === "string"
           ? activity.dayBucket.replace(/^day-/, "")
           : null;
-      normalized.metricLabel =
-        activity.metricLabel ??
-        (dayLabel ? `Sorting Game - Hari ${dayLabel}` : "Aktivitas permainan");
       normalized.description =
-        activity.description ?? "Kamu menyelesaikan tantangan Sorting Game.";
+        activity.description ?? "Kamu bermain game sorting sampah.";
       normalized.title =
         activity.title ??
         (dayLabel ? `Sorting Game Hari ${dayLabel}` : "Sorting Game");
@@ -340,7 +327,6 @@ function normalizeActivity(activity, index = 0) {
             : typeof activity.missed_days === "number"
             ? activity.missed_days
             : null;
-        normalized.metricLabel = activity.metricLabel ?? "Streak terhenti";
         normalized.description =
           activity.description ??
           (missedDays
@@ -348,8 +334,6 @@ function normalizeActivity(activity, index = 0) {
             : "Streak kebiasaan sedang terhenti. Mulai lagi hari ini!");
         normalized.title = activity.title ?? "Streak Putus!";
       } else if (milestone === 30) {
-        normalized.metricLabel =
-          activity.metricLabel ?? "Streak 30 hari tercapai";
         normalized.description =
           activity.description ??
           (streakDays
@@ -357,8 +341,6 @@ function normalizeActivity(activity, index = 0) {
             : "Kamu mencapai 30 hari streak kebiasaan!");
         normalized.title = activity.title ?? "Streak 30 Hari!";
       } else if (milestone === 7) {
-        normalized.metricLabel =
-          activity.metricLabel ?? "Streak 7 hari tercapai";
         normalized.description =
           activity.description ??
           (streakDays
@@ -366,8 +348,6 @@ function normalizeActivity(activity, index = 0) {
             : "Kamu mencapai 7 hari streak kebiasaan!");
         normalized.title = activity.title ?? "Streak 7 Hari!";
       } else {
-        normalized.metricLabel =
-          activity.metricLabel ?? "Update streak kebiasaan";
         normalized.description =
           activity.description ??
           (streakDays

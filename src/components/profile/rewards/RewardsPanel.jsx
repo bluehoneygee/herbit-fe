@@ -111,11 +111,10 @@ export default function RewardsPanel({
       setRedeeming(true);
       try {
         const response = await apiClient.post(
-          `/vouchers/${voucher.id}/redeem`,
+          `/vouchers/${voucher.id}/claim`,
           username ? { username } : {}
         );
         const redemption = response.data.data;
-        console.log("Voucher redemption result:", redemption);
         const instructions = normalizeList(redemption.instructions);
         const successPayload = {
           ...(redemption ?? {}),
@@ -235,8 +234,8 @@ function RedeemDialog({
   const terms = normalizeList(voucher.terms);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-6">
-      <div className="w-full max-w-sm overflow-hidden rounded-[32px] bg-white shadow-2xl">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-6">
+      <div className="w-full max-w-sm overflow-hidden rounded-4xl bg-white shadow-2xl">
         <div className="flex items-start gap-4 px-6 py-6">
           <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden ">
             <img
@@ -322,50 +321,82 @@ function RedeemDialog({
 function RewardsSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="rounded-[28px] border border-black/10 bg-white p-6 shadow-sm">
-        <div className="h-4 w-24 rounded bg-gray-200" />
-        <div className="mt-4 h-3 w-32 rounded bg-gray-200" />
-        <div className="mt-2 h-3 w-20 rounded bg-gray-200" />
-        <div className="mt-4 h-10 w-32 rounded-full bg-gray-100" />
-      </div>
+      <section className="relative overflow-hidden rounded-[20px] border border-[#FACC15] bg-white px-4 py-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="h-36 w-36 shrink-0 rounded-full border border-[#FACC15]/40 bg-gray-100 animate-pulse" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
+            <div className="h-5 w-40 rounded bg-gray-200 animate-pulse" />
+            <div className="h-3 w-56 rounded bg-gray-200 animate-pulse" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-gray-700">
+                <span className="h-3 w-16 rounded bg-gray-200 animate-pulse" />
+                <span className="h-3 w-10 rounded bg-gray-200 animate-pulse" />
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-[#FFF7E0]">
+                  <div className="absolute inset-y-0 left-0 w-1/2 bg-[#FEA800] animate-pulse" />
+                </div>
+                <div className="h-7 w-7 rounded-full bg-gray-100 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 h-8 w-40 rounded-full bg-gray-200 animate-pulse" />
+      </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="h-4 w-32 rounded bg-gray-200" />
-          <div className="h-3 w-16 rounded bg-gray-200" />
-        </div>
+        <h3 className="text-sm font-semibold text-gray-900">
+          Voucher tersedia
+        </h3>
         <div className="space-y-3">
           {Array.from({ length: 2 }).map((_, idx) => (
             <div
               key={`voucher-skeleton-${idx}`}
-              className="flex items-center gap-4 rounded-2xl border border-black/10 bg-white p-4 shadow-sm"
+              className="relative overflow-hidden rounded-[12px] border border-[#FACC15]/40 bg-white shadow-sm"
             >
-              <div className="h-12 w-12 rounded-2xl bg-gray-100" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-32 rounded bg-gray-200" />
-                <div className="h-3 w-20 rounded bg-gray-200" />
+              <div className="relative z-10 px-4 pt-5 pb-3">
+                <div className="flex items-start justify-between gap-3 pl-4 pr-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-12 w-12 shrink-0 rounded-2xl bg-gray-100 animate-pulse" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
+                      <div className="h-3 w-40 max-w-[180px] rounded bg-gray-200 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="h-7 w-24 rounded-full bg-gray-200 animate-pulse" />
+                </div>
+                <div className="mt-4 h-px w-full border-t border-dashed border-gray-200" />
+                <div className="flex items-center gap-3 pt-2">
+                  <div className="relative flex-1">
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#FFE6BF]">
+                      <div className="h-full w-1/2 rounded-full bg-[#FEA800] animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="h-7 w-7 rounded-full bg-gray-100 animate-pulse" />
+                </div>
               </div>
-              <div className="h-8 w-24 rounded-full bg-gray-100" />
             </div>
           ))}
         </div>
       </section>
 
-      <div className="space-y-3">
-        <div className="h-4 w-28 rounded bg-gray-200" />
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-900">Riwayat Redeem</h3>
         {Array.from({ length: 3 }).map((_, idx) => (
           <div
             key={`history-skeleton-${idx}`}
             className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
           >
-            <div className="h-10 w-10 rounded-2xl bg-gray-100" />
+            <div className="h-10 w-10 rounded-2xl bg-gray-100 animate-pulse" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 w-32 rounded bg-gray-200" />
-              <div className="h-2 w-20 rounded bg-gray-200" />
+              <div className="h-3 w-40 rounded bg-gray-200 animate-pulse" />
+              <div className="h-2.5 w-24 rounded bg-gray-200 animate-pulse" />
             </div>
+            <div className="h-4 w-12 rounded bg-gray-200 animate-pulse" />
           </div>
         ))}
-      </div>
+      </section>
     </div>
   );
 }
@@ -378,8 +409,8 @@ function RedeemSuccessDialog({ redemption, onClose }) {
   const normalizedInstructions = normalizeList(instructions);
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 px-6">
-      <div className="w-full max-w-sm overflow-hidden rounded-[32px] bg-white shadow-2xl">
+    <div className="fixed inset-0 z-110 flex items-center justify-center bg-black/40 px-6">
+      <div className="w-full max-w-sm overflow-hidden rounded-4xl bg-white shadow-2xl">
         <div className="flex items-start gap-4 px-6 py-6">
           <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-white overflow-hidden ">
             <img

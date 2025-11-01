@@ -36,7 +36,7 @@ export default function ProgressCard({
         <div className="relative" style={{ width: size, height: size }}>
           <div className="absolute inset-0 grid place-items-center">
             <div
-              className="h-[36px] w-[36px] rounded-full grid place-items-center"
+              className="h-9 w-9 rounded-full grid place-items-center"
               style={{ backgroundColor: "#F7D98A" }}
             >
               <span className="text-[12px] font-semibold text-black">%{p}</span>

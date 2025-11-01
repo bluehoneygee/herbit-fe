@@ -17,6 +17,8 @@ export default function ProfileLayoutClient({ params, children }) {
   const router = useRouter();
   const { summary, loading, error, refetch } = useProfileSummary();
 
+  console.log("PROFILEEE:", summary);
+
   const tabs = summary?.tabs?.length ? summary.tabs : DEFAULT_TABS;
   const activeTab = useMemo(() => {
     if (pathname?.endsWith("/aktivitas")) return "activities";
@@ -34,6 +36,10 @@ export default function ProfileLayoutClient({ params, children }) {
     [params.username, router]
   );
 
+  const handleSettings = useCallback(() => {
+    router.push("/setting");
+  }, [router]);
+
   const contextValue = useMemo(
     () => ({ summary, loading, error, refetch }),
     [summary, loading, error, refetch]
@@ -41,24 +47,32 @@ export default function ProfileLayoutClient({ params, children }) {
 
   return (
     <ProfileSummaryProvider value={contextValue}>
-      <div className="px-4 pb-10">
-        <ProfileHeader user={headerUser} loading={loading} />
-
-        {tabs.length > 0 && (
-          <ProfileTabs
-            tabs={tabs}
-            activeId={activeTab}
-            onChange={handleTabChange}
+      <div className="flex min-h-screen flex-col">
+        <div className="sticky top-0 z-20 bg-[#F8F8F8]/95 px-4 pb-4 backdrop-blur">
+          <ProfileHeader
+            user={headerUser}
+            loading={loading}
+            onSettings={handleSettings}
           />
-        )}
 
-        {error && (
-          <div className="mt-6 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
-            Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
-          </div>
-        )}
+          {tabs.length > 0 && (
+            <ProfileTabs
+              tabs={tabs}
+              activeId={activeTab}
+              onChange={handleTabChange}
+            />
+          )}
+        </div>
 
-        <section className="mt-6 space-y-4">{children}</section>
+        <div className="flex-1 overflow-y-auto px-4 pb-28">
+          {error && (
+            <div className="mt-6 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
+              Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
+            </div>
+          )}
+
+          <section className="mt-6 space-y-4">{children}</section>
+        </div>
       </div>
     </ProfileSummaryProvider>
   );

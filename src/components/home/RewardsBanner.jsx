@@ -65,15 +65,15 @@ export default function RewardsBanner({ items = [], loading = false }) {
             width: `${banners.length * 100}%`,
           }}
         >
-          {banners.map((banner, index) => (
+          {banners.map((banner) => (
             <a
-              key={banner.id ?? banner.name ?? `reward-banner-${index}`}
-              href={banner.href ?? "#"}
+              key={banner.name}
+              href={banner.href}
               className="block w-full flex-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FEA800]"
             >
               <img
                 src={banner.image}
-                alt={banner.alt ?? "Rewards"}
+                alt={banner.name}
                 className="block h-[92px] w-full rounded-2xl object-cover"
               />
             </a>

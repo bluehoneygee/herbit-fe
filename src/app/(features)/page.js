@@ -85,7 +85,7 @@ export default function HomePage() {
 
       <HeaderHero user={user} loading={loading} />
 
-      <section className="mt-[12px] space-y-6 pb-6">
+      <section className="mt-6 space-y-6 pb-6">
         {error && (
           <div className="mx-4 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
             Gagal memuat data: {error}. Silakan coba beberapa saat lagi.

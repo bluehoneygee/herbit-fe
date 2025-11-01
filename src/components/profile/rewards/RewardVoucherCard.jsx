@@ -21,7 +21,7 @@ export default function RewardVoucherCard({ voucher, onRedeem }) {
       <div className="relative z-10 px-4 pt-5 pb-3">
         <div className="flex items-start justify-between gap-3 pl-4 pr-4">
           <div className="flex items-start gap-3">
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[16px] bg-gray-100">
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
               {voucher.image ? (
                 <Image
                   src={voucher.image}
@@ -62,7 +62,7 @@ export default function RewardVoucherCard({ voucher, onRedeem }) {
 
         <div className="flex items-center gap-3 pt-1">
           <div className="relative flex-1">
-            <div className="h-[10px] w-full overflow-hidden rounded-full bg-[#FFE6BF]">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#FFE6BF]">
               <div
                 className="h-full rounded-full bg-[#FEA800] transition-all"
                 style={{ width: `${percent}%` }}

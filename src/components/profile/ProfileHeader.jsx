@@ -49,7 +49,12 @@ function PencilIcon({ size = 14, color = "#6B7280" }) {
   );
 }
 
-export default function ProfileHeader({ user, onEdit, onSettings, loading = false }) {
+export default function ProfileHeader({
+  user,
+  onEdit,
+  onSettings,
+  loading = false,
+}) {
   if (loading || !user) {
     return (
       <header
@@ -57,12 +62,23 @@ export default function ProfileHeader({ user, onEdit, onSettings, loading = fals
         style={{ paddingTop: "calc(24px + env(safe-area-inset-top))" }}
       >
         <div className="flex items-center justify-between">
-          <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
-          <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+          <h1 className="text-xl font-bold text-gray-900">Your Profile</h1>
+          <button
+            type="button"
+            aria-label="Pengaturan profil"
+            className="p-0 m-0 bg-transparent border-0 inline-flex items-center justify-center cursor-pointer"
+            style={{ lineHeight: 0 }}
+          >
+            <GearIcon size={28} />
+          </button>
         </div>
-        <div className="mt-6 flex items-start gap-3">
-          <div className="h-14 w-14 rounded-full bg-gray-200 animate-pulse" />
-          <div className="flex-1 space-y-2">
+
+        <div className="mt-6 flex items-start gap-3" aria-live="polite">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full shadow ring-2 ring-white/60 bg-white">
+            <div className="h-14 w-14 rounded-full bg-[#FEA800] animate-pulse" />
+          </div>
+
+          <div className="min-w-0 flex flex-1 flex-col gap-1">
             <div className="h-4 w-40 rounded bg-gray-200 animate-pulse" />
             <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
             <div className="h-3 w-28 rounded bg-gray-200 animate-pulse" />
@@ -71,34 +87,29 @@ export default function ProfileHeader({ user, onEdit, onSettings, loading = fals
       </header>
     );
   }
-  const displayName = user?.name ?? user?.username ?? user?.email ?? "Teman Herbit";
-  const username = user?.username ?? user?.email ?? displayName;
+
+  const displayName = user.username ?? "Teman Herbit";
   const avatar = (() => {
     if (user?.photoUrl) return user.photoUrl;
-    if (user?.photo_url) return user.photo_url;
-    const source = displayName || username;
+    const source = displayName;
     const cleaned = source.replace(/[^a-zA-Z\s]/g, " ").trim();
-    const initials = cleaned
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "T";
+    const initials =
+      cleaned
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || "T";
     const params = new URLSearchParams({
       name: initials,
-      background: "FACC15",
+      background: "FEA800",
       color: "ffffff",
       size: "128",
     });
     return `https://ui-avatars.com/api/?${params.toString()}`;
   })();
-  const points =
-    typeof user?.totalPoints === "number"
-      ? user.totalPoints
-      : typeof user?.total_points === "number"
-      ? user.total_points
-      : user?.points ?? 0;
+  const points = user?.totalPoints ?? 0;
 
   return (
     <header
@@ -122,12 +133,15 @@ export default function ProfileHeader({ user, onEdit, onSettings, loading = fals
         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full shadow ring-2 ring-white/60 bg-white">
           <img
             src={avatar}
-            alt={user?.name ? `Foto ${user.name}` : "Avatar pengguna"}
+            alt={`Avatar ${displayName}`}
             className="h-full w-full object-cover"
           />
         </div>
+
         <div className="min-w-0 flex flex-1 flex-col gap-1">
-          <p className="text-xl font-bold text-[#111827]">{displayName}</p>
+          <p className="text-xl font-bold text-[#111827]">
+            <span className="capitalize">{displayName} </span>
+          </p>
           <p className="text-sm font-semibold text-[#FEA800]">
             🏅 {points} Points
           </p>

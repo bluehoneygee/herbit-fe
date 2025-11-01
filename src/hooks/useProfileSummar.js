@@ -22,6 +22,7 @@ export default function useProfileSummary() {
         headers: { "Cache-Control": "no-cache" },
       });
       const data = response.data ?? {};
+      console.log("Profile summary API data: ", data);
       const rawMilestone = data?.rewards?.milestone;
       const milestones = Array.isArray(rawMilestone)
         ? rawMilestone
