@@ -1,15 +1,23 @@
-"use client"
+// src/components/ecoenzyme/timeline/DayItem.jsx
+"use client";
 
 import { Button } from '@/components/ui/button';
 import { Check, Lock, Camera, ChevronRight, Zap } from "lucide-react";
-import { CalendarCheck } from 'lucide-react'; // Asumsi CalendarCheck ada atau import dari lucide-react
+import { CalendarCheck } from 'lucide-react';
 
 function toLocalShort(d) {
     if (!d) return "-";
     return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 }
 
-export default function DayItem({ dayData, currentDayIndex, photos, handleCheckin, handlePhotoUpload }) {
+export default function DayItem({ 
+  dayData, 
+  currentDayIndex, 
+  photos, 
+  handleCheckin, 
+  handlePhotoUpload,
+  projectStatus // ✅ Props baru: status proyek dari backend
+}) {
     const { dayIndex, date, label, unlocked, checked } = dayData;
     const isGasDay = dayIndex % 7 === 0;
     const isPhotoDay = dayIndex === 30 || dayIndex === 60 || dayIndex === 90;
@@ -17,6 +25,12 @@ export default function DayItem({ dayData, currentDayIndex, photos, handleChecki
     const monthPhotoKey = `month${month}`;
     const photoPresent = !!photos[monthPhotoKey];
     const isToday = dayIndex === currentDayIndex;
+
+    // ✅ Validasi upload berdasarkan status proyek
+    const canUpload = isPhotoDay && 
+                      isToday && 
+                      checked && 
+                      projectStatus === "ongoing"; // Hanya boleh upload jika status "ongoing"
 
     let baseClass = "bg-white p-4 rounded-xl shadow-md border border-gray-100 flex items-center justify-between transition-all duration-300 hover:shadow-lg";
     if (isToday && unlocked && !checked) {
@@ -51,23 +65,43 @@ export default function DayItem({ dayData, currentDayIndex, photos, handleChecki
     let StatusContent;
 
     if (isPhotoDay) {
+        // ✅ Tampilkan pesan sesuai status proyek
+        let uploadMessage = "";
+        let isUploadDisabled = false;
+        
+        if (projectStatus === "cancelled") {
+            uploadMessage = "Proyek dibatalkan";
+            isUploadDisabled = true;
+        } else if (projectStatus === "completed") {
+            uploadMessage = "Sudah selesai";
+            isUploadDisabled = true;
+        } else if (!checked) {
+            uploadMessage = "Check-in dulu hari ini";
+            isUploadDisabled = true;
+        } else if (!isToday) {
+            uploadMessage = "Belum waktunya";
+            isUploadDisabled = true;
+        }
+
         const photoLabel = photoPresent ? "Ganti Foto" : "Upload Foto";
-        const isPhotoReady = unlocked;
-        StatusContent = (
-            <label className={`cursor-pointer text-sm px-3 py-2 rounded-lg font-medium flex items-center gap-1 flex-shrink-0 transition-colors duration-300 ${isPhotoReady ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
+        
+        StatusContent = isUploadDisabled ? (
+            <span className="text-sm text-gray-500 px-3 py-2">
+                {uploadMessage}
+            </span>
+        ) : (
+            <label className="cursor-pointer text-sm px-3 py-2 rounded-lg font-medium flex items-center gap-1 flex-shrink-0 transition-colors duration-300 bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl">
                 <Camera className="w-4 h-4" />
                 <span>{photoLabel}</span>
-                {isPhotoReady && (
-                    <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={(e) => { 
-                            const file = e.target.files?.[0]; 
-                            handlePhotoUpload(month, file);
-                        }}
-                    />
-                )}
+                <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => { 
+                        const file = e.target.files?.[0]; 
+                        handlePhotoUpload(month, file);
+                    }}
+                />
             </label>
         );
     } else if (checked) { 

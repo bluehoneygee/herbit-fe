@@ -79,7 +79,7 @@ const RecipeSection = ({ totalWeightKg, gula, air, isFermentationActive, startFe
                 </div>
             </div>
 
-            {!isFermentationActive && totalWeight > 0 && (
+            {!isFermentationActive && totalWeightKg > 0 && (
                 <Button
                     onClick={startFermentation}
                     className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 mt-4 shadow-md transition-transform duration-150 active:scale-95"
