@@ -7,6 +7,7 @@ import { List, Share2 } from "lucide-react";
 import CongratsModal from "./CongratsModal";
 import apiClient from "@/lib/apiClient";
 import { getMe } from "@/lib/user";
+import { useRouter } from "next/navigation";
 
 import {
   DndContext,
@@ -57,6 +58,7 @@ export default function GameBoard() {
   const [wrongCount, setWrongCount] = useState(0);
   const [entitledPoint, setEntitledPoint] = useState(0);
   const [alreadyClaimed, setAlreadyClaimed] = useState(false);
+  const router = useRouter();
 
   const { factData, fetchFunFact, loading } = useFunFact();
   const { soundOn, setSoundOn, audioUnlocked, unlockOnce, playOk, playMiss } =
@@ -107,13 +109,13 @@ export default function GameBoard() {
         console.log("🎮 Initializing game...");
 
         // 1) Ambil user
-        const me = await getMe(); 
-        const u = me ?? {}; 
+        const me = await getMe();
+        const u = me ?? {};
 
         console.log("👤 User data:", u);
 
         setServerStreak(u.sortingStreak ?? 0);
-        setTotalPoints(u.totalPoints ?? 0); 
+        setTotalPoints(u.totalPoints ?? 0);
         console.log("📊 Init totalPoints:", u.totalPoints);
 
         // 2) Start session
@@ -302,14 +304,22 @@ export default function GameBoard() {
               </span>
             </div>
 
-            <div className="flex items-center justify-between h-full">
+            <div className="flex items-start justify-between h-full">
               <div className="w-12 sm:w-36" />
-              <button
-                onClick={resetAll}
-                className="pixel pixel-btn blue cursor-pointer rounded px-3 py-1 text-xs md:text-base bg-white/20 hover:bg-white/30"
-              >
-                Play!
-              </button>
+              <div className="flex flex-col items-center">
+                <button
+                  onClick={resetAll}
+                  className="pixel pixel-btn blue cursor-pointer rounded px-3 py-1 text-xs md:text-base bg-white/20 hover:bg-white/30"
+                >
+                  Play!
+                </button>
+                <button
+                  onClick={() => router.replace("/game")}
+                  className="pixel pixel-btn red cursor-pointer rounded px-3 py-1 text-xs md:text-base bg-white/20 hover:bg-white/30 mt-4"
+                >
+                  Back
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -390,7 +400,7 @@ export default function GameBoard() {
             onShare={handleOpenShareFromCongrats}
             alreadyClaimed={alreadyClaimed}
             claimPoints={entitledPoint || 10}
-            currentPoints={totalPoints} 
+            currentPoints={totalPoints}
             onNext={() => {
               setOpenCongrats(false);
               const d = ymd();
