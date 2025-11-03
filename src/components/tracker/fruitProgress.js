@@ -86,7 +86,7 @@ export default function FruitProgress({ leaves = [] }) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                Buah siap tumbuh 🍏
+                Buah siap tumbuh! 
               </motion.p>
             ) : (
               <motion.p
@@ -98,7 +98,7 @@ export default function FruitProgress({ leaves = [] }) {
                 transition={{ duration: 0.4 }}
               >
                 {nextFruitIn === 0
-                  ? "Buah siap tumbuh 🍏"
+                  ? "Buah siap tumbuh! "
                   : `${nextFruitIn} daun lagi untuk 1 buah`}
               </motion.p>
             )}

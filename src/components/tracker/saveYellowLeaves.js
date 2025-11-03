@@ -17,11 +17,17 @@ function TimerIcon({ color = "#FEA800" }) {
       className="h-4.5 w-4.5"
       aria-hidden="true"
     >
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
+      <g transform="rotate(15 12 12)">
+        <path d="M12 2c-4 4-6 8-6 12s2 8 6 10 6-6 6-10-2-8-6-12z" />
+        <line x1="12" y1="2" x2="12" y2="22" />
+        <line x1="12" y1="6" x2="16" y2="10" />
+        <line x1="12" y1="6" x2="8" y2="10" />
+      </g>
     </svg>
   );
 }
+
+
 
 function ProgressBar({ value = 0 }) {
   const width = `${clampNumber(value)}%`;
