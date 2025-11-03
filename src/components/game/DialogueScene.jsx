@@ -6,10 +6,11 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 const LINES = [
-  "Halo, aku Bu Ana 👩‍🦱.",
-  "Ayo kita buang sampah di tempat yang tepat setiap hari.",
-  "Pisahkan jadi 4: Organik, Daur Ulang, Kertas, dan Residu.",
-  "Kebiasaan kecil bareng keluarga bikin rumah rapi dan lingkungan sehat!",
+  "Halo, aku Bu Ana.",
+  "Yuk, biasakan buang sampah dengan benar.",
+  "Pisahkan jadi empat: organik, daur ulang, kertas, residu.",
+  "Selesai main, kamu akan dapat poin.",
+  "Kumpulkan poinmu dan tukar dengan hadiah.",
 ];
 
 export default function DialogueScene({ className = "", onEnd }) {

@@ -12,9 +12,5 @@ export const metadata = {
 };
 
 export default function AuthLayout({ children }) {
-  return (
-    <html lang="en">
-      <body className={`${poppins.variable} antialiased`}>{children}</body>
-    </html>
-  );
+  return <div className="auth-layout">{children}</div>;
 }

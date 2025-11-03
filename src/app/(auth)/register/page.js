@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 
 const SEEN_KEY = "herbit_onboarding_v1";
 const API = (
@@ -19,6 +19,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleBack = () => {
     localStorage.removeItem(SEEN_KEY);
@@ -137,32 +139,54 @@ export default function RegisterPage() {
             <label htmlFor="password" className="text-sm text-black">
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Your password"
-              className="w-full rounded-lg bg-[#FFF3DA] p-4 text-sm outline-none mt-1"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
-              required
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Your password"
+                className="w-full rounded-lg bg-[#FFF3DA] p-4 text-sm outline-none mt-1 pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label htmlFor="confirm" className="text-sm text-black">
               Confirm Password
             </label>
-            <input
-              id="confirm"
-              type="password"
-              placeholder="Confirm your password"
-              className="w-full rounded-lg bg-[#FFF3DA] p-4 text-sm outline-none mt-1"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              minLength={6}
-              required
-            />
+            <div className="relative">
+              <input
+                id="confirm"
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirm your password"
+                className="w-full rounded-lg bg-[#FFF3DA] p-4 text-sm outline-none mt-1 pr-12"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                tabIndex={-1}
+                aria-label={showConfirm ? "Hide password" : "Show password"}
+              >
+                {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           {err && <p className="text-sm text-red-600">{err}</p>}
@@ -171,7 +195,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-[#FFD369] border-2 border-[#FDBE45] font-medium
+            className="w-full py-3 rounded-lg bg-[#FFD369] font-medium
                        hover:bg-[#ffc632] disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
             {loading ? "Mendaftar…" : "Register"}

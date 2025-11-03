@@ -5,9 +5,11 @@ import bg from "@/assets/bg.jpg";
 import DialogueScene from "@/components/game/DialogueScene";
 import SplitText from "@/components/game/SplitText";
 import TargetCursor from "@/components/game/TargetCursor";
+import { useRouter } from "next/navigation";
 
 export default function Game() {
   const [screen, setScreen] = useState("splash"); // "splash" | "dialogue" | "board"
+  const router = useRouter();
   const handleAnimationComplete = () => {
     console.log("All letters have animated!");
   };
@@ -48,6 +50,12 @@ export default function Game() {
               className="cursor-target pixel pixel-btn yellow cursor-pointer select-none mt-2"
             >
               Ayo Mainkan
+            </button>
+            <button
+              onClick={() => router.replace("/")}
+              className="cursor-target pixel pixel-btn red cursor-pointer select-none mt-6"
+            >
+              Kembali ke Home
             </button>
           </div>
         )}
