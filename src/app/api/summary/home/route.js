@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import apiClient from "@/lib/apiClient";
+import { normalizePhotos } from "@/lib/absoluteUrl";
 
 export async function GET(request) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request) {
       },
     });
 
-    const summary = response.data?.data ?? response.data ?? null;
+    const summary = normalizePhotos(response.data?.data ?? response.data ?? null);
     if (!summary) {
       return NextResponse.json(
         { error: "Home summary not found" },

@@ -37,7 +37,7 @@ export default function ProfileLayoutClient({ params, children }) {
   );
 
   const handleSettings = useCallback(() => {
-    router.push("/setting");
+    router.push("/settings");
   }, [router]);
 
   const contextValue = useMemo(
@@ -48,7 +48,7 @@ export default function ProfileLayoutClient({ params, children }) {
   return (
     <ProfileSummaryProvider value={contextValue}>
       <div className="flex min-h-screen flex-col">
-        <div className="sticky top-0 z-20 bg-[#F8F8F8]/95 px-4 pb-4 backdrop-blur">
+        <div className="sticky top-0 z-20 bg-white px-4 pb-4 backdrop-blur">
           <ProfileHeader
             user={headerUser}
             loading={loading}
