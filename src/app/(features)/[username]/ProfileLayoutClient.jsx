@@ -37,7 +37,7 @@ export default function ProfileLayoutClient({ params, children }) {
   );
 
   const handleSettings = useCallback(() => {
-    router.push("/setting");
+    router.push("/settings");
   }, [router]);
 
   const contextValue = useMemo(
