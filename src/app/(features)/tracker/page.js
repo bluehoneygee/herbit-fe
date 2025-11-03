@@ -16,25 +16,25 @@ export default function Tracker() {
       >
         {/* Tombol kembali + judul utama */}
         <div className="flex items-center gap-3">
-          <button
+          {/* <button
             type="button"
             onClick={() => window.history.back()}
             className="h-11 w-11 rounded-2xl border border-black/10 bg-white shadow-sm flex items-center justify-center transition-transform duration-150 active:scale-95"
             aria-label="Kembali"
           >
             <ChevronLeft className="w-5 h-5 text-gray-900" />
-          </button>
+          </button> */}
 
           <span className="text-xl font-bold text-gray-900">
-            Home
+            Tantangan Hari Ini
           </span>
         </div>
 
-        <div className="mt-8 flex items-center justify-between">
+        {/* <div className="mt-8 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-[#0A0A19]">
             Tantangan Hari Ini
           </h1>
-        </div>  
+        </div>   */}
 
         {/* Baris tanggal + tombol kanan */}
         <div className="mt-8 flex items-center justify-between flex-wrap gap-2">

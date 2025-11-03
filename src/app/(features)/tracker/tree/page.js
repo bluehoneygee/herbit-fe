@@ -22,15 +22,15 @@ export default function YourTree() {
           </button>
 
           <span className="text-xl font-bold text-gray-900">
-            Habit
+            Progress Pohonmu
           </span>
         </div>
 
-        <div className="mt-8 flex items-center justify-between">
+        {/* <div className="mt-8 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-[#0A0A19]">
             Progress Pohonmu
           </h1>
-        </div>  
+        </div>   */}
       </header>
 
         {/* Konten utama */}
