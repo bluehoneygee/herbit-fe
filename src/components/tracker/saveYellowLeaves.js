@@ -87,7 +87,7 @@ export default function SaveYellowLeaves({ leaves = [] }) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                Semua daun sehat! 🍃
+                Semua daun sehat!
               </motion.p>
             ) : (
               <motion.p

@@ -90,7 +90,6 @@ export default function Tree() {
       );
 
       setPoints(totalPoints);
-      setMessage(`🎉 Kamu dapat ${awarded} poin!`);
       setShowPointGain(true);
       setTimeout(() => {
         setMessage("");
@@ -131,7 +130,7 @@ export default function Tree() {
         </AnimatePresence>
       </div>
 
-        <Link href="/app/(features)/${username}/rewards">
+        <Link href="/${username}/rewards">
           <Button className="bg-violet-600 hover:bg-violet-700 text-white font-semibold flex items-center shadow-md transition-transform duration-150 active:scale-95 w-full sm:w-auto">
             Rewards and Vouchers
             <ChevronRight className="ml-2 h-4 w-4" />
