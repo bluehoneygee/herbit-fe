@@ -8,28 +8,28 @@ export default function Onboarding({ onStart, onSkip }) {
 
   const slides = [
     {
-      img: "/splashScreen/1.jpg",
-      title: "Bingung Sampah Organik Rumah Tangga Mau Diapain?",
-      desc: "Sisa dapur bukan sekadar sampah. Kita bisa ubah jadi ecoenzim bermanfaat.",
+      img: "/splashScreen/1.png",
+      title: "Bersama, Kita Bisa Jaga Bumi",
+      desc: "Herbit bantu perempuan memulai kebiasaan hijau dari hal sederhana karena perubahan besar berawal dari rumah.",
     },
     {
       img: "/splashScreen/2.jpg",
-      title: "Setiap Aksi Kecilmu Sangat Berarti",
-      desc: "Dari tantangan sederhana lahir perubahan besar. Selesaikan misi, kumpulkan poin!",
+      title: "Mulai dari Rutinitas Kecilmu",
+      desc: "Catat rutinitas ramah lingkunganmu setiap hari. Dapatkan poin untuk setiap langkah kecil menuju perubahan besar.",
     },
     {
-      img: "/splashScreen/3.jpg",
-      title: "Siap Jadi Eco Warrior?",
-      desc: "Ribuan perempuan sudah mulai. Giliran kamu mulai hari ini.",
+      img: "/splashScreen/3.png",
+      title: "Sekarang Giliran Kamu!",
+      desc: "Ribuan perempuan sudah memulai. Sekarang giliranmu jadi bagian dari Herbit, kumpulkan poin, dan jaga bumi bareng-bareng.",
     },
   ];
 
   const next = () => setI((p) => Math.min(p + 1, slides.length - 1));
 
   return (
-    <div className="h-dvh w-dvw overflow-hidden bg-white flex flex-col items-center justify-between">
+    <div className="h-dvh w-dvw overflow-hidden bg-[#FBE6C9] flex flex-col items-center justify-between">
       <div className="flex flex-col items-center justify-center flex-1 w-full pt-6">
-        <div className="w-full max-w-[520px] aspect-[16/11] relative">
+        <div className="w-full max-w-[560px] aspect-[16/11] relative">
           <Image
             src={slides[i].img}
             alt=""
@@ -50,7 +50,7 @@ export default function Onboarding({ onStart, onSkip }) {
               key={idx}
               onClick={() => setI(idx)}
               className={`h-2 rounded-full transition-all ${
-                idx === i ? "w-6 bg-gray-900" : "w-2 bg-gray-300"
+                idx === i ? "w-6 bg-[#ff8b0f]" : "w-2 bg-[#FBA94F]"
               }`}
             />
           ))}
