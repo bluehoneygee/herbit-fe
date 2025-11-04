@@ -82,13 +82,13 @@ export default function DialogueScene({ className = "", onEnd }) {
           <div className="mt-3 flex gap-4">
             <button
               onClick={() => setI(0)}
-              className="px-4 rounded-lg border pixel-btn rose hover:bg-zinc-100 cursor-pointer"
+              className="px-2 py-1 md:px-4 md:py-2 rounded-lg border pixel-btn rose hover:bg-zinc-100 cursor-pointer text-xs md:text-base"
             >
               Ulangi
             </button>
             <button
               onClick={next}
-              className="px-4 rounded-lg bg-emerald-600 pixel-btn mint text-white font-semibold cursor-pointer"
+              className="px-2 py-1 md:px-4 md:py-2 rounded-lg bg-emerald-600 pixel-btn mint text-white font-semibold cursor-pointer text-xs md:text-base"
             >
               {i < LINES.length - 1 ? "Lanjut →" : "Mulai Game →"}
             </button>

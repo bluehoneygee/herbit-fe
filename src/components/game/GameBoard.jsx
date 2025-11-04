@@ -106,7 +106,6 @@ export default function GameBoard() {
   useEffect(() => {
     (async () => {
       try {
-
         // 1) Ambil user
         const me = await getMe();
         const u = me ?? {};
@@ -310,7 +309,7 @@ export default function GameBoard() {
                 </button>
                 <button
                   onClick={() => router.replace("/game")}
-                  className="pixel pixel-btn red cursor-pointer rounded px-3 py-1 text-xs md:text-base bg-white/20 hover:bg-white/30 mt-4"
+                  className="pixel pixel-btn red cursor-pointer rounded px-3 py-1 text-xs md:text-base bg-white/20 hover:bg-white/30 mt-4 pointer-events-auto z-30"
                 >
                   Back
                 </button>
