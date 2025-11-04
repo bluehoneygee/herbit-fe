@@ -4,6 +4,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MaskIcon from "@/components/ui/MaskIcon";
 import { useEffect, useMemo, useState } from "react";
+import { DEFAULT_TABS } from "@/constants";
+
+const AUTH_RESERVED_SEGMENTS = new Set([
+  "",
+  "login",
+  "register",
+  "forgot-password",
+  "reset-password",
+  "settings",
+]);
+
+const FEATURE_SEGMENTS = DEFAULT_TABS.map((tab) => {
+  if (!tab?.href || tab.href === "/") return null;
+  const firstSegment = tab.href.split("/").filter(Boolean)[0] ?? null;
+  return firstSegment;
+}).filter(Boolean);
+
+const RESERVED_SEGMENTS = new Set([
+  ...AUTH_RESERVED_SEGMENTS,
+  ...FEATURE_SEGMENTS,
+]);
 
 export default function BottomNav({
   tabs,
@@ -12,19 +33,12 @@ export default function BottomNav({
   className = "",
 }) {
   const pathname = usePathname();
-  const reservedSegments = new Set([
-    "",
-    "login",
-    "register",
-    "forgot-password",
-    "reset-password",
-  ]);
 
   const username = useMemo(() => {
     if (!pathname) return null;
     const match = pathname.match(/^\/([^/]+)/);
     const candidate = match?.[1] ?? null;
-    if (!candidate || reservedSegments.has(candidate)) {
+    if (!candidate || RESERVED_SEGMENTS.has(candidate)) {
       return null;
     }
     return candidate;

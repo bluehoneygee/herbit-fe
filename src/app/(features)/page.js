@@ -8,6 +8,7 @@ import ProgressCard from "@/components/home/ProgressCard";
 import RewardsBanner from "@/components/home/RewardsBanner";
 import useHomeSummary from "@/hooks/useHomeSummary";
 import { clampNumber } from "@/lib/utils";
+import Link from "next/link";
 import { useMemo } from "react";
 
 export default function HomePage() {
@@ -114,9 +115,12 @@ export default function HomePage() {
             <h3 className="text-sm font-semibold text-gray-900">
               Eco-enzym Aktif
             </h3>
-            <button className="text-[11px] font-semibold text-gray-800 tracking-wide">
+            <Link
+              href="/eco-enzyme"
+              className="text-[11px] font-semibold text-gray-800 tracking-wide"
+            >
               LIHAT SEMUA
-            </button>
+            </Link>
           </div>
           <EcoEnzymActive
             batch={ecoData.batch}
@@ -131,9 +135,12 @@ export default function HomePage() {
             <h3 className="text-sm font-semibold text-gray-900">
               Daily Habits
             </h3>
-            <button className="text-[11px] font-semibold text-gray-800 tracking-wide">
+            <Link
+              href="/tracker"
+              className="text-[11px] font-semibold text-gray-800 tracking-wide"
+            >
               LIHAT SEMUA
-            </button>
+            </Link>
           </div>
           <div className="max-h-[150px] overflow-y-auto overscroll-contain pr-1 ">
             <DailyHabitsList items={habitsToday} loading={loading} />
