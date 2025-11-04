@@ -308,7 +308,7 @@ export default function GameBoard() {
                   Play!
                 </button>
                 <button
-                  onClick={() => router.replace("/game")}
+                  onClick={() => router.replace("/")}
                   className="pixel pixel-btn red cursor-pointer rounded px-3 py-1 text-xs md:text-base bg-white/20 hover:bg-white/30 mt-4 pointer-events-auto z-30"
                 >
                   Back
