@@ -55,7 +55,7 @@ export default function RewardsMilestone({
     : canClaim
     ? "Siap klaim!"
     : current > 0
-    ? "Tetap semangat, tinggal sedikit lagi!"
+    ? "Sedikit lagi!"
     : "Yuk mulai hari ini!";
   const description = activeItem.description;
   const ctaLabel = canClaim ? "Klaim sekarang" : "Belum bisa diklaim";
@@ -72,11 +72,11 @@ export default function RewardsMilestone({
           />
         </div>
         <div className="flex-1 space-y-1.5">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#9A6A2F]">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A6A2F]">
             {title}
           </p>
-          <h2 className="text-xl font-extrabold text-[#3D1B0F]">{subtitle}</h2>
-          <p className="text-xs text-gray-700/80">{description}</p>
+          <h2 className="text-lg font-extrabold text-[#3D1B0F]">{subtitle}</h2>
+          <p className="text-[10px] text-gray-700/80">{description}</p>
           <ProgressBar current={current} target={target} percent={percent} />
         </div>
       </div>

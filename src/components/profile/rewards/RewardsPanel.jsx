@@ -245,11 +245,11 @@ function RedeemDialog({
             />
           </div>
           <div className="flex-1 space-y-1">
-            <h4 className="text-lg font-semibold text-gray-900">
+            <h4 className="text-[15px] font-semibold text-gray-900">
               {voucher.name}
             </h4>
-            <p className="text-sm text-gray-500">{voucher.description}</p>
-            <p className="text-sm font-semibold text-[#F97316]">
+            <p className="text-[11px] text-gray-500">{voucher.description}</p>
+            <p className="text-[11px] font-semibold text-[#F97316]">
               Poin dibutuhkan: {voucher.pointsRequired} poin
             </p>
           </div>
@@ -422,12 +422,12 @@ function RedeemSuccessDialog({ redemption, onClose }) {
 
           <div className="flex-1 space-y-1">
             <h4 className="text-lg font-semibold text-gray-900">
-              Voucher Berhasil ditukar!
+              Berhasil ditukar!
             </h4>
-            <p className="text-sm text-gray-500">Voucher {name}</p>
+            <p className="text-sm text-gray-500">{name}</p>
             {expiresAt && (
-              <p className="text-xs font-semibold text-[#FEA800]">
-                Berlaku sampai:{" "}
+              <p className="text-sm font-semibold text-[#FEA800]">
+                Berlaku sampai: <br></br>
                 {new Date(expiresAt).toLocaleDateString("id-ID", {
                   day: "2-digit",
                   month: "short",
