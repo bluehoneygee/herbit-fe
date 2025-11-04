@@ -46,14 +46,14 @@ function HistoryCard({ item, onSelect }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-semibold text-gray-900">
+        <p className="truncate text-xs font-semibold text-gray-900">
           {item.name}
         </p>
         <p className="text-xs text-gray-500">{dateLabel}</p>
       </div>
 
       {pointsLabel && (
-        <span className="ml-3 whitespace-nowrap text-sm font-semibold text-rose-600">
+        <span className="ml-3 whitespace-nowrap text-xs font-semibold text-rose-600">
           {pointsLabel}
         </span>
       )}
