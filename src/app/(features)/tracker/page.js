@@ -11,30 +11,15 @@ export default function Tracker() {
   return (
     <main className="min-h-screen bg-white mb-24">
       <header
-        className="px-4"
+        className="sticky top-0 z-20 bg-white px-4 pb-4 backdrop-blur"
         style={{ paddingTop: "calc(24px + env(safe-area-inset-top))" }}
       >
         {/* Tombol kembali + judul utama */}
         <div className="flex items-center gap-3">
-          {/* <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="h-11 w-11 rounded-2xl border border-black/10 bg-white shadow-sm flex items-center justify-center transition-transform duration-150 active:scale-95"
-            aria-label="Kembali"
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-900" />
-          </button> */}
-
           <span className="text-xl font-bold text-gray-900">
             Tantangan Hari Ini
           </span>
         </div>
-
-        {/* <div className="mt-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-[#0A0A19]">
-            Tantangan Hari Ini
-          </h1>
-        </div>   */}
 
         {/* Baris tanggal + tombol kanan */}
         <div className="mt-8 flex items-center justify-between flex-wrap gap-2">
