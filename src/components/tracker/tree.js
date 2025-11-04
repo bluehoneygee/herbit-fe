@@ -18,6 +18,7 @@ export default function Tree() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [showPointGain, setShowPointGain] = useState(false);
+  const [profileHref, setProfileHref] = useState(null);
   const pointRef = useRef(null);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function Tree() {
       const userData = meRes.data.data || {};
 
       const totalPoints = userData.totalPoints || 0;
+      const username = userData.username || userData.slug || null;
 
       const mappedLeaves = leafData.map((leaf) => ({
         id: leaf._id,
@@ -67,6 +69,9 @@ export default function Tree() {
       setLeaves(uniqueLeaves);
       setFruits(mappedFruits);
       setPoints(totalPoints);
+      if (username) {
+        setProfileHref(`/${username}/rewards`);
+      }
     } catch (err) {
       console.error("Error fetching tree data:", err);
     } finally {
@@ -82,6 +87,7 @@ export default function Tree() {
       const meRes = await getMe();
       const userData = meRes.data.data || {};
       const totalPoints = userData.totalPoints || 0;
+      const username = userData.username || userData.slug || null;
 
       setFruits((prev) =>
         prev.map((f) =>
@@ -90,6 +96,9 @@ export default function Tree() {
       );
 
       setPoints(totalPoints);
+      if (username) {
+        setProfileHref(`/${username}/rewards`);
+      }
       setShowPointGain(true);
       setTimeout(() => {
         setMessage("");
@@ -130,13 +139,23 @@ export default function Tree() {
         </AnimatePresence>
       </div>
 
-        <Link href="/${username}/rewards">
-          <Button className="bg-violet-600 hover:bg-violet-700 text-white font-semibold flex items-center shadow-md transition-transform duration-150 active:scale-95 w-full sm:w-auto">
+        {profileHref ? (
+          <Link href={profileHref}>
+            <Button className="bg-violet-600 hover:bg-violet-700 text-white font-semibold flex items-center shadow-md transition-transform duration-150 active:scale-95 w-full sm:w-auto">
+              Rewards and Vouchers
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        ) : (
+          <Button
+            disabled
+            className="bg-violet-300 text-white font-semibold flex items-center shadow-md w-full sm:w-auto"
+          >
             Rewards and Vouchers
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
-        </Link>
-      
+        )}
+
     </div>
 
       {/* Judul */}
