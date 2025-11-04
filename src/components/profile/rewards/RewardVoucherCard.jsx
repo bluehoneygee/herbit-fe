@@ -37,7 +37,7 @@ export default function RewardVoucherCard({ voucher, onRedeem }) {
               )}
             </div>
             <div>
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 className="text-xs font-semibold text-gray-900">
                 {voucher.name}
               </h3>
               <p className="mt-1 text-xs text-gray-500">
@@ -48,7 +48,7 @@ export default function RewardVoucherCard({ voucher, onRedeem }) {
           <button
             type="button"
             onClick={() => onRedeem?.(voucher)}
-            className={`rounded-full px-4 py-1 text-xs font-semibold text-white shadow transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            className={`rounded-full px-2 py-1 text-xs font-semibold text-white shadow transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
               canRedeem
                 ? "bg-[#4A2D8B] hover:bg-[#3C2374] focus-visible:ring-[#4A2D8B]"
                 : "bg-gray-300 text-gray-600 hover:bg-gray-300 cursor-default focus-visible:ring-gray-300"
