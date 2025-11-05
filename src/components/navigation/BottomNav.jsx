@@ -63,7 +63,11 @@ export default function BottomNav({
           headers: { "Cache-Control": "no-cache" },
           signal: controller.signal,
         });
-        const data = response.data ?? {};
+        const payload = response.data ?? {};
+        const data =
+          payload && typeof payload === "object" && typeof payload.data === "object"
+            ? payload.data
+            : payload;
         const fallbackUsername = data?.user?.username ?? null;
         if (!cancelled && fallbackUsername) {
           setProfileHref(`/${fallbackUsername}/aktivitas`);

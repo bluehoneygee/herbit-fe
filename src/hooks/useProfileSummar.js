@@ -22,7 +22,11 @@ export default function useProfileSummary() {
       const response = await apiClient.get("/users/profile-summary", {
         headers: { "Cache-Control": "no-cache" },
       });
-      const data = response.data ?? {};
+      const payload = response.data ?? {};
+      const data =
+        payload && typeof payload === "object" && typeof payload.data === "object"
+          ? payload.data
+          : payload;
       console.log("Profile summary API data: ", data);
       const rawMilestone = data?.rewards?.milestone;
       const milestones = Array.isArray(rawMilestone)
@@ -50,15 +54,23 @@ export default function useProfileSummary() {
     } catch (err) {
       let message = "Unknown error";
       if (axios.isAxiosError(err)) {
-        const payload = err.response?.data?.error;
-        if (typeof payload === "string") {
-          message = payload;
-        } else if (payload && typeof payload === "object") {
+        const responsePayload = err.response?.data ?? {};
+        const errorPayload =
+          responsePayload?.error ??
+          responsePayload?.message ??
+          responsePayload?.details;
+        if (typeof errorPayload === "string") {
+          message = errorPayload;
+        } else if (
+          errorPayload &&
+          typeof errorPayload === "object" &&
+          !Array.isArray(errorPayload)
+        ) {
           message =
-            payload.details ??
-            payload.message ??
-            payload.code ??
-            JSON.stringify(payload);
+            errorPayload.details ??
+            errorPayload.message ??
+            errorPayload.code ??
+            JSON.stringify(errorPayload);
         } else if (err.message) {
           message = err.message;
         }

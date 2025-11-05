@@ -24,18 +24,22 @@ export function useHomeSummary() {
         headers: { "Cache-Control": "no-cache" },
       });
       const payload = response.data ?? {};
-      setData({ ...DEFAULT_SUMMARY, ...payload });
+      const content =
+        payload && typeof payload === "object" && typeof payload.data === "object"
+          ? payload.data
+          : payload;
+      setData({ ...DEFAULT_SUMMARY, ...content });
       setError(null);
     } catch (err) {
       let message = "Unknown error";
       if (axios.isAxiosError(err)) {
-        const dataError = err.response?.data?.error;
+        const responsePayload = err.response?.data ?? {};
+        const dataError =
+          responsePayload?.error ??
+          responsePayload?.message ??
+          responsePayload?.details;
         if (typeof dataError === "string") {
           message = dataError;
-        } else if (typeof dataError?.details === "string") {
-          message = dataError.details;
-        } else if (typeof dataError?.message === "string") {
-          message = dataError.message;
         } else if (err.message) {
           message = err.message;
         }
