@@ -1,21 +1,29 @@
 // src/app/eco-enzyme/timeline/page.jsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import ChatButton from "@/components/floating-chat/ChatButton";
-import { useToast, ToastContainer } from "@/components/ecoenzyme/timeline/TimelineToast";
+import {
+  useToast,
+  ToastContainer,
+} from "@/components/ecoenzyme/timeline/TimelineToast";
 import DayItem from "@/components/ecoenzyme/timeline/DayItem";
 import MonthSection from "@/components/ecoenzyme/timeline/MonthSection";
 import FinalClaimCard from "@/components/ecoenzyme/timeline/FinalClaimCard";
 import TimelineHeader from "@/components/ecoenzyme/timeline/TimelineHeader";
 import TimelineProgressCard from "@/components/ecoenzyme/timeline/TimelineProgressCard";
+import apiClient from "@/lib/apiClient";
+import {
+  fetchProjects,
+  fetchUploadsByProject,
+  createUpload,
+  claimPoints as claimPointsApi,
+} from "@/lib/ecoEnzyme";
 
-const CURRENT_USER_ID = "69030abde003c64806d5b2bb"; // Ganti sesuai auth
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 const TOTAL_DAYS = 90;
 const DAYS_PER_MONTH = 30;
 const DAYS_PER_WEEK = 7;
@@ -69,108 +77,124 @@ function getDominantMonth(startDay, endDay) {
   return dominantMonth;
 }
 
-// API calls
-async function fetchProject(userId) {
-  const res = await fetch(`${API_BASE}/ecoenzim/projects?userId=${userId}`);
-  if (!res.ok) throw new Error("Failed to fetch project");
-  const projects = await res.json();
-  return projects.find(p => p.status === "ongoing" || p.status === "not_started") || null;
-}
-
-async function fetchUploads(projectId) {
-  const res = await fetch(`${API_BASE}/ecoenzim/uploads/project/${projectId}`);
-  if (!res.ok) throw new Error("Failed to fetch uploads");
-  return await res.json();
-}
-
-async function createCheckin(projectId, userId) {
-  const res = await fetch(`${API_BASE}/ecoenzim/uploads`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ecoenzimProjectId: projectId,
-      userId,
-      uploadedDate: new Date().toISOString(),
-      prePointsEarned: 1,
-      monthNumber: null,
-      photoUrl: null
-    })
-  });
-  if (!res.ok) throw new Error("Failed to create check-in");
-  return await res.json();
-}
-
-async function uploadPhoto(projectId, userId, monthNumber, photoDataUrl) {
-  const res = await fetch(`${API_BASE}/ecoenzim/uploads`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ecoenzimProjectId: projectId,
-      userId,
-      monthNumber,
-      photoUrl: photoDataUrl,
-      uploadedDate: new Date().toISOString(),
-      prePointsEarned: 50
-    })
-  });
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Failed to upload photo");
-  }
-  return await res.json();
-}
-
-async function claimFinalPoints(projectId) {
-  const res = await fetch(`${API_BASE}/ecoenzim/projects/${projectId}/claim`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" }
-  });
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Failed to claim points");
-  }
-  return await res.json();
-}
-
 export default function TimelinePage() {
+  const [userId, setUserId] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [userError, setUserError] = useState(null);
+
   const [project, setProject] = useState(null);
   const [uploads, setUploads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [now, setNow] = useState(new Date());
   const [openWeeks, setOpenWeeks] = useState(() => new Set([0]));
   const toast = useToast();
 
-  // Load data from backend
-  const loadData = async () => {
+  useEffect(() => {
+    let active = true;
+    async function loadUser() {
+      try {
+        setUserLoading(true);
+        const response = await apiClient.get("/auth/me", {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const data = response.data ?? {};
+        const payload = data.data ?? data;
+        const resolvedId =
+          payload?._id || payload?.id || payload?.user?._id || null;
+        if (!active) return;
+        setUserId(resolvedId);
+        setUserError(null);
+      } catch (err) {
+        if (!active) return;
+        console.error("[TimelinePage] loadUser error:", err);
+        setUserError(
+          err instanceof Error ? err.message : "Gagal memuat pengguna"
+        );
+        setUserId(null);
+      } finally {
+        if (active) setUserLoading(false);
+      }
+    }
+    loadUser();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const fetchActiveProject = useCallback(async () => {
+    if (!userId) return null;
+    const payload = await fetchProjects(`?userId=${encodeURIComponent(userId)}`);
+    const arr = Array.isArray(payload?.projects)
+      ? payload.projects
+      : Array.isArray(payload)
+      ? payload
+      : [];
+    return (
+      arr.find(
+        (p) =>
+          p.status === "ongoing" ||
+          p.status === "not_started" ||
+          p.started === true
+      ) || null
+    );
+  }, [userId]);
+
+  const loadData = useCallback(async () => {
+    if (!userId) {
+      setProject(null);
+      setUploads([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const proj = await fetchProject(CURRENT_USER_ID);
-      if (proj) {
-        setProject(proj);
-        const ups = await fetchUploads(proj._id);
-        setUploads(ups);
+      setError(null);
+      const active = await fetchActiveProject();
+      if (active) {
+        setProject(active);
+        const ups = await fetchUploadsByProject(active._id);
+        const normalized = Array.isArray(ups)
+          ? ups
+          : Array.isArray(ups?.uploads)
+          ? ups.uploads
+          : [];
+        setUploads(normalized);
       } else {
         setProject(null);
         setUploads([]);
       }
     } catch (err) {
-      console.error("Load data error:", err);
-      toast.push("Gagal memuat data: " + err.message, { duration: 3000 });
+      console.error("Timeline loadData error:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setProject(null);
+      setUploads([]);
+      toast.push(
+        "Gagal memuat data: " +
+          (err instanceof Error ? err.message : String(err)),
+        { duration: 3000 }
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchActiveProject, toast, userId]);
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Derived states
-  const harvestIso = project?.endDate;
-  const startDate = useMemo(() => startFromHarvestIso(harvestIso), [harvestIso]);
-  
+  const startDate = useMemo(
+    () => startFromHarvestIso(project?.endDate),
+    [project?.endDate]
+  );
+
   const currentDayIndex = useMemo(() => {
     if (!startDate) return 0;
     const today = new Date(now);
@@ -189,13 +213,11 @@ export default function TimelinePage() {
     return Math.floor((currentDayIndex - 1) / DAYS_PER_WEEK);
   }, [currentDayIndex]);
 
-  // Build checkins map from uploads
   const checkins = useMemo(() => {
     const map = {};
     if (!startDate || !uploads.length) return map;
-    
-    uploads.forEach(upload => {
-      // Daily check-in (monthNumber = null)
+
+    uploads.forEach((upload) => {
       if (!upload.monthNumber) {
         const uploadDate = new Date(upload.uploadedDate);
         uploadDate.setHours(0, 0, 0, 0);
@@ -209,10 +231,9 @@ export default function TimelinePage() {
     return map;
   }, [uploads, startDate]);
 
-  // Build photos map from uploads
   const photos = useMemo(() => {
     const map = {};
-    uploads.forEach(upload => {
+    uploads.forEach((upload) => {
       if (upload.monthNumber && upload.photoUrl) {
         map[`month${upload.monthNumber}`] = upload.photoUrl;
       }
@@ -220,230 +241,267 @@ export default function TimelinePage() {
     return map;
   }, [uploads]);
 
-  const isDayUnlocked = (dayIndex) => {
-    if (!currentDayIndex) return false;
-    return dayIndex <= currentDayIndex;
+  const handleCreateUpload = useCallback(async (payload) => {
+    const res = await createUpload(payload);
+    return res?.upload || res;
+  }, []);
+
+  const handleCheckin = async () => {
+    if (!userId) throw new Error("User belum diketahui.");
+    if (!project?._id) throw new Error("Project belum tersedia.");
+
+    const today = new Date().toDateString();
+    const already = uploads.some(
+      (u) =>
+        new Date(u.uploadedDate).toDateString() === today && !u.monthNumber
+    );
+    if (already) {
+      return { success: false, message: "Sudah check-in hari ini" };
+    }
+
+    const upload = await handleCreateUpload({
+      ecoenzimProjectId: project._id,
+      userId,
+      uploadedDate: new Date().toISOString(),
+      prePointsEarned: 1,
+    });
+
+    setUploads((prev) => [upload, ...prev]);
+    return { success: true };
   };
 
-  const harvestDate = harvestIso ? new Date(harvestIso) : null;
+  const handleUploadPhoto = async (monthNumber, photoUrl) => {
+    if (!userId) throw new Error("User belum diketahui.");
+    if (!project?._id) throw new Error("Project belum tersedia.");
 
-  // Handlers
-  const handleCheckin = async (dayIndex) => {
-    if (!isDayUnlocked(dayIndex)) {
-      toast.push("Belum waktunya check-in untuk hari ini.", { duration: 2000 });
-      return;
-    }
-    
-    if (checkins[dayIndex]?.checked) {
-      toast.push("Sudah check-in untuk hari ini.", { duration: 2000 });
-      return;
-    }
+    const upload = await handleCreateUpload({
+      ecoenzimProjectId: project._id,
+      userId,
+      monthNumber,
+      photoUrl,
+      uploadedDate: new Date().toISOString(),
+      prePointsEarned: 50,
+    });
 
-    try {
-      await createCheckin(project._id, CURRENT_USER_ID);
-      toast.push("Check-in berhasil ✅", { duration: 2000 });
-      await loadData(); // Refresh data
-    } catch (err) {
-      console.error("Check-in error:", err);
-      toast.push("Gagal check-in: " + err.message, { duration: 3000 });
-    }
+    setUploads((prev) => [upload, ...prev]);
+    return upload;
   };
 
-  const handlePhotoUpload = async (month, file) => {
-    if (!file) return;
-    
-    // Check if it's the right day
-    const dayIndex = month * 30; // Day 30, 60, 90
-    if (!isDayUnlocked(dayIndex)) {
-      toast.push(`Belum waktunya upload foto bulan ${month}`, { duration: 3000 });
-      return;
-    }
+  const [canClaimFinal, setCanClaimFinal] = useState(false);
+  const [isFinalClaimedState, setIsFinalClaimedState] = useState(false);
 
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target.result;
-      try {
-        await uploadPhoto(project._id, CURRENT_USER_ID, month, dataUrl);
-        toast.push(`Foto Bulanan (Bulan ${month}) berhasil di-upload`, { duration: 2500 });
-        await loadData(); // Refresh data
-      } catch (err) {
-        console.error("Upload photo error:", err);
-        toast.push("Gagal upload foto: " + err.message, { duration: 3000 });
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFinalClaim = async () => {
-    if (project.isClaimed) {
-      toast.push("Poin akhir sudah diklaim sebelumnya.", { duration: 3000 });
+  useEffect(() => {
+    if (!project) {
+      setCanClaimFinal(false);
+      setIsFinalClaimedState(false);
       return;
     }
 
-    try {
-      await claimFinalPoints(project._id);
-      toast.push(`🎉 Selamat! Anda mengklaim ${TOTAL_POINTS} Poin!`, { duration: 5000 });
-      await loadData(); // Refresh data
-    } catch (err) {
-      console.error("Claim error:", err);
-      toast.push(err.message, { duration: 4000 });
-    }
+    const start = new Date(project.startDate);
+    const nowDate = new Date();
+    const currentDay = Math.floor((nowDate - start) / 86400000) + 1;
+
+    const checkedDays = uploads.filter((u) => !u.monthNumber).length;
+
+    const uploaded30 = uploads.some((u) => u.monthNumber === 1);
+    const uploaded60 = uploads.some((u) => u.monthNumber === 2);
+    const uploaded90 = uploads.some((u) => u.monthNumber === 3);
+
+    const eligible =
+      currentDay >= TOTAL_DAYS &&
+      checkedDays >= TOTAL_DAYS &&
+      uploaded30 &&
+      uploaded60 &&
+      uploaded90;
+
+    setCanClaimFinal(eligible);
+    setIsFinalClaimedState(
+      project.status === "completed" || Boolean(project.isClaimed)
+    );
+  }, [project, uploads]);
+
+  const handleClaimPoints = async () => {
+    if (!project?._id) throw new Error("Project tidak ditemukan");
+    const res = await claimPointsApi(project._id);
+    setProject((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: "completed",
+            isClaimed: true,
+            points: res?.points ?? prev.points,
+          }
+        : prev
+    );
+    return res;
   };
 
-  // Check final claim conditions
-  const totalDaysDone = Object.keys(checkins).filter(k => /^\d+$/.test(k) && checkins[k]?.checked).length;
-  const allCheckinsDone = totalDaysDone >= TOTAL_DAYS;
-  const allPhotosUploaded = !!photos['month1'] && !!photos['month2'] && !!photos['month3'];
-  const isReadyForClaim = allCheckinsDone && allPhotosUploaded && !project?.isClaimed;
-  const isFinalClaimed = project?.isClaimed || project?.status === "completed";
+  const harvestDate = project?.endDate ? new Date(project.endDate) : null;
+  const safeHarvestDate =
+    harvestDate && !Number.isNaN(harvestDate.getTime()) ? harvestDate : null;
+  const daysRemaining = safeHarvestDate
+    ? Math.max(
+        0,
+        Math.floor((safeHarvestDate - new Date()) / (1000 * 60 * 60 * 24))
+      )
+    : TOTAL_DAYS;
+  const daysCompleted = TOTAL_DAYS - daysRemaining;
+  const progressPct = Math.min(
+    100,
+    Math.round((daysCompleted / TOTAL_DAYS) * 100)
+  );
 
-  // Data iteration for weeks
-  const weeks = [];
-  for (let w = 0; w < WEEKS; w++) {
-    const startDay = w * DAYS_PER_WEEK + 1;
-    const days = [];
-    for (let i = 0; i < DAYS_PER_WEEK; i++) {
-      const dayIndex = startDay + i;
-      if (dayIndex > TOTAL_DAYS) break;
-      const date = startDate ? dayDateFromStart(startDate, dayIndex) : null;
-      
-      let label = `Hari ${dayIndex}: Check-in Rutin`;
-      if (dayIndex === 30 || dayIndex === 60 || dayIndex === 90) {
-        label = `Hari ${dayIndex}: Upload Foto Bulanan`;
-      }
-      
-      const unlocked = isDayUnlocked(dayIndex);
-      const checked = !!(checkins[dayIndex]?.checked);
-      days.push({ dayIndex, date, label, unlocked, checked });
-    }
-    weeks.push({ weekIndex: w, startDay, endDay: Math.min(startDay + DAYS_PER_WEEK - 1, TOTAL_DAYS), days });
+  const totalPrePoints = (uploads || []).reduce(
+    (sum, upload) => sum + (Number(upload.prePointsEarned) || 0),
+    0
+  );
+
+  const toggleWeek = (index) => {
+    setOpenWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  if (userLoading || loading) {
+    return <div className="p-8 text-center">Loading...</div>;
   }
 
-  // Month summary
-  const monthSummary = (month) => {
-    const { start, end } = monthRange(month);
-    let total = end - start + 1;
-    let done = 0;
-    for (let d = start; d <= end; d++) {
-      if (checkins[d]?.checked) done++;
-    }
-    return {
-      start,
-      end,
-      total,
-      done,
-      pct: Math.round((done / total) * 100) || 0,
-      photo: photos[`month${month}`] || null
-    };
-  };
-
-  const overallPct = Math.round((totalDaysDone / TOTAL_DAYS) * 100) || 0;
-
-  // Loading state
-  if (loading) {
+  if (userError) {
     return (
-      <main className="min-h-screen bg-white-50 p-4 sm:p-6 lg:p-12 pb-60">
-        <div className="max-w-xl mx-auto text-center">
-          <p className="text-gray-600">Memuat data...</p>
-        </div>
-      </main>
+      <div className="p-8 text-center text-red-500">
+        Error: {userError}. Silakan login ulang.
+      </div>
     );
   }
 
-  // No project state
-  if (!project) {
+  if (error) {
     return (
-      <main className="min-h-screen bg-white-50 p-4 sm:p-6 lg:p-12 pb-60">
-        <div className="max-w-xl mx-auto">
-          <Card className="rounded-2xl shadow-lg border-2 border-purple-200">
-            <CardContent className="p-6">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <Link href="/eco-enzyme">
-                    <Button variant="ghost" size="icon" className="rounded-lg bg-white shadow-md">
-                      <ChevronLeft className="w-5 h-5 text-gray-700" />
-                    </Button>
-                  </Link>
-                  <h1 className="font-extrabold text-xl text-purple-600">Timeline Fermentasi</h1>
-                </div>
-                <div className="space-y-3">
-                  <p className="text-gray-700">Timeline belum aktif karena belum ada proses fermentasi yang dimulai.</p>
-                  <p className="text-sm text-gray-500">Silakan mulai fermentasi Eco Enzyme Anda di halaman Eco Enzyme untuk mengaktifkan pelacakan 90 hari.</p>
-                  <Link href="/eco-enzyme">
-                    <Button className="bg-purple-600 text-white hover:bg-purple-700 w-full">
-                      Mulai Fermentasi Sekarang
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <ChatButton />
-        <ToastContainer toasts={toast.toasts} remove={toast.remove} />
-      </main>
+      <div className="p-8 text-center text-red-500">
+        Error: {error.message || String(error)}.
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white-50 p-4 sm:p-6 lg:py-8 lg:px-8 pb-24">
-      <style jsx global>{`
-        @keyframes pulse-once { 0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); } 50% { box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.3), 0 4px 6px -4px rgba(168, 85, 247, 0.2); } }
-        .animate-pulse-once { animation: pulse-once 2s ease-in-out 1; }
-        @keyframes bounce-once { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.1); } 50% { transform: scale(0.95); } 75% { transform: scale(1.05); } }
-        .animate-bounce-once { animation: bounce-once 0.6s ease-out 1; }
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin-slow { animation: spin-slow 8s linear infinite; }
-      `}</style>
-      
-      <div className="w-full mx-auto max-w-10xl">
-        <TimelineHeader startDate={startDate} harvestDate={harvestDate} />
-        
+    <main className="min-h-screen bg-white">
+      <ToastContainer />
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-200">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-lg"
+          onClick={() => window.history.back()}
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Timeline Eco Enzyme
+        </h1>
+      </div>
+
+      <section className="px-4 py-6 space-y-4">
+        <TimelineHeader project={project} totalPoints={TOTAL_POINTS} />
+
         <TimelineProgressCard
-          totalDaysDone={totalDaysDone}
-          progressPct={overallPct}
-          isFermentationActive={!!harvestIso}
+          currentDayIndex={currentDayIndex}
+          totalDays={TOTAL_DAYS}
+          progressPct={progressPct}
+          totalPrePoints={totalPrePoints}
+          uploads={uploads}
+          onCheckin={handleCheckin}
+          checkins={checkins}
         />
 
-        <div className="space-y-6 mt-6">
-          {[1, 2, 3].map((month) => {
-            const monthWeeks = weeks.filter(w => getDominantMonth(w.startDay, w.endDay) === month);
-            const summary = monthSummary(month);
-            
+        <div className="grid gap-4">
+          {Array.from({ length: WEEKS }).map((_, idx) => {
+            const rangeStart = idx * DAYS_PER_WEEK + 1;
+            const rangeEnd = Math.min(
+              (idx + 1) * DAYS_PER_WEEK,
+              TOTAL_DAYS
+            );
+            const isOpen = openWeeks.has(idx) || idx === activeWeekIndex;
+
             return (
-              <MonthSection
-                key={month}
-                month={month}
-                summary={summary}
-                monthWeeks={monthWeeks}
-                startDate={startDate}
-                currentDayIndex={currentDayIndex}
-                photos={photos}
-                handleCheckin={handleCheckin}
-                handlePhotoUpload={handlePhotoUpload}
-                openWeeks={openWeeks}
-                setOpenWeeks={setOpenWeeks}
-                activeWeekIndex={activeWeekIndex}
-              />
+              <Card key={`week-${idx}`} className="border border-gray-200">
+                <button
+                  className="w-full flex items-center justify-between px-4 py-3 text-left"
+                  onClick={() => toggleWeek(idx)}
+                >
+                  <span className="text-sm font-semibold text-gray-900">
+                    Minggu {idx + 1} ({rangeStart}-{rangeEnd})
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {isOpen ? "Sembunyikan" : "Lihat"}
+                  </span>
+                </button>
+                {isOpen && (
+                  <CardContent className="px-4 pb-4">
+                    <div className="grid grid-cols-7 gap-2">
+                      {Array.from(
+                        { length: rangeEnd - rangeStart + 1 },
+                        (_, offset) => {
+                          const dayIndex = rangeStart + offset;
+                          const checked = checkins[dayIndex]?.checked;
+                          const date = startDate
+                            ? dayDateFromStart(startDate, dayIndex)
+                            : null;
+                          return (
+                            <DayItem
+                              key={`day-${dayIndex}`}
+                              dayIndex={dayIndex}
+                              date={date}
+                              checked={checked}
+                            />
+                          );
+                        }
+                      )}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
             );
           })}
         </div>
 
-        <div className="mt-12">
-          <FinalClaimCard
-            isReadyForClaim={isReadyForClaim}
-            isFinalClaimed={isFinalClaimed}
-            allCheckinsDone={allCheckinsDone}
-            allPhotosUploaded={allPhotosUploaded}
-            TOTAL_POINTS={TOTAL_POINTS}
-            handleFinalClaim={handleFinalClaim}
-          />
-        </div>
-      </div>
-      
+        <MonthSection
+          monthTitle="Bulan Pertama"
+          monthNumber={1}
+          monthRange={monthRange(1)}
+          photoUrl={photos.month1}
+          uploads={uploads}
+          onUpload={(photoUrl) => handleUploadPhoto(1, photoUrl)}
+        />
+
+        <MonthSection
+          monthTitle="Bulan Kedua"
+          monthNumber={2}
+          monthRange={monthRange(2)}
+          photoUrl={photos.month2}
+          uploads={uploads}
+          onUpload={(photoUrl) => handleUploadPhoto(2, photoUrl)}
+        />
+
+        <MonthSection
+          monthTitle="Bulan Ketiga"
+          monthNumber={3}
+          monthRange={monthRange(3)}
+          photoUrl={photos.month3}
+          uploads={uploads}
+          onUpload={(photoUrl) => handleUploadPhoto(3, photoUrl)}
+        />
+
+        <FinalClaimCard
+          canClaim={canClaimFinal}
+          isClaimed={isFinalClaimedState}
+          onClaim={handleClaimPoints}
+          totalPoints={TOTAL_POINTS}
+        />
+      </section>
+
       <ChatButton />
-      <ToastContainer toasts={toast.toasts} remove={toast.remove} />
     </main>
   );
 }

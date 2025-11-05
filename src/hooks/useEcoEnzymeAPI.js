@@ -33,10 +33,14 @@ export default function useEcoEnzymeAPI(userId) {
     setError(null);
 
     try {
-      // Attach userId as query param so backend can filter by user
-      const projects = await fetchProjects(`?userId=${encodeURIComponent(userId)}`);
-      // fetchProjects returns array (as per backend)
-      const arr = Array.isArray(projects) ? projects : [];
+      const payload = await fetchProjects(
+        `?userId=${encodeURIComponent(userId)}`
+      );
+      const arr = Array.isArray(payload?.projects)
+        ? payload.projects
+        : Array.isArray(payload)
+        ? payload
+        : [];
 
       // Choose latest project (newest createdAt)
       const latest = arr
