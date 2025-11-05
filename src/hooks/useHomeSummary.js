@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import apiClient from "@/lib/apiClient";
+import { normalizePhotos } from "@/lib/absoluteUrl";
 
 const DEFAULT_SUMMARY = {
   user: null,
@@ -28,7 +29,8 @@ export function useHomeSummary() {
         payload && typeof payload === "object" && typeof payload.data === "object"
           ? payload.data
           : payload;
-      setData({ ...DEFAULT_SUMMARY, ...content });
+      const normalized = normalizePhotos({ ...DEFAULT_SUMMARY, ...content });
+      setData(normalized);
       setError(null);
     } catch (err) {
       let message = "Unknown error";

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import apiClient from "@/lib/apiClient";
+import { normalizePhotos } from "@/lib/absoluteUrl";
 
 const DEFAULT_SUMMARY = {
   user: null,
@@ -27,21 +28,21 @@ export default function useProfileSummary() {
         payload && typeof payload === "object" && typeof payload.data === "object"
           ? payload.data
           : payload;
-      console.log("Profile summary API data: ", data);
-      const rawMilestone = data?.rewards?.milestone;
+      const normalizedData = normalizePhotos({ ...DEFAULT_SUMMARY, ...data });
+      console.log("Profile summary API data: ", normalizedData);
+      const rawMilestone = normalizedData?.rewards?.milestone;
       const milestones = Array.isArray(rawMilestone)
         ? rawMilestone
         : rawMilestone
         ? [rawMilestone]
         : [];
       const voucherAvailable =
-        data?.vouchers?.available ??
-        (Array.isArray(data?.vouchers) ? data.vouchers : []);
-      const voucherHistory = data?.vouchers?.history ?? [];
+        normalizedData?.vouchers?.available ??
+        (Array.isArray(normalizedData?.vouchers) ? normalizedData.vouchers : []);
+      const voucherHistory = normalizedData?.vouchers?.history ?? [];
 
       setSummary({
-        ...DEFAULT_SUMMARY,
-        ...data,
+        ...normalizedData,
         rewards: {
           milestone: milestones,
         },

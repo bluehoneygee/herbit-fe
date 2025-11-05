@@ -6,6 +6,7 @@ import MaskIcon from "@/components/ui/MaskIcon";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import apiClient from "@/lib/apiClient";
+import { normalizePhotos } from "@/lib/absoluteUrl";
 import { DEFAULT_TABS } from "@/constants";
 
 const AUTH_RESERVED_SEGMENTS = new Set([
@@ -68,7 +69,8 @@ export default function BottomNav({
           payload && typeof payload === "object" && typeof payload.data === "object"
             ? payload.data
             : payload;
-        const fallbackUsername = data?.user?.username ?? null;
+        const normalized = normalizePhotos({ ...data });
+        const fallbackUsername = normalized?.user?.username ?? null;
         if (!cancelled && fallbackUsername) {
           setProfileHref(`/${fallbackUsername}/aktivitas`);
         }
