@@ -29,6 +29,8 @@ function ChevronRightIcon({ size = 16, color = "#9CA3AF" }) {
 export default function SettingsClient({ profile }) {
   const router = useRouter();
 
+  console.log("[settings] SettingsClient profile:", profile);
+
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
