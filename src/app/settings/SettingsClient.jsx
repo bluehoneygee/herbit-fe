@@ -57,7 +57,10 @@ export default function SettingsClient({ profile }) {
         const data = payload?.data ?? payload ?? null;
         const normalized = normalizePhotos(data);
         if (!active) return;
-        console.log("[settings] SettingsClient profile (client fetch):", normalized);
+        console.log(
+          "[settings] SettingsClient profile (client fetch):",
+          normalized
+        );
         setProfileData(normalized);
       } catch (error) {
         if (!active) return;
@@ -162,7 +165,12 @@ export default function SettingsClient({ profile }) {
         href: "/settings/email",
       },
     ],
-    [email, normalizedUsername, resolvedProfile?.photoUrl, resolvedProfile?.photo_url]
+    [
+      email,
+      normalizedUsername,
+      resolvedProfile?.photoUrl,
+      resolvedProfile?.photo_url,
+    ]
   );
 
   return (
@@ -213,11 +221,7 @@ export default function SettingsClient({ profile }) {
           {showSkeleton ? (
             <>
               <div className="h-20 w-20 overflow-hidden rounded-full border border-black/10 bg-[#FEA800] animate-pulse" />
-              <div className="flex-1 space-y-3">
-                <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
-                <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
-                <div className="h-3 w-28 rounded bg-gray-200 animate-pulse" />
-              </div>
+              <div className="flex-1 space-y-3"></div>
             </>
           ) : (
             <div className="h-20 w-20 overflow-hidden rounded-full border border-black/10">
@@ -232,9 +236,7 @@ export default function SettingsClient({ profile }) {
 
         <div className="mt-8 divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
           {profileError && (
-            <p className="px-4 py-3 text-sm text-red-500">
-              {profileError}
-            </p>
+            <p className="px-4 py-3 text-sm text-red-500">{profileError}</p>
           )}
           {showSkeleton
             ? [1, 2, 3].map((id) => (

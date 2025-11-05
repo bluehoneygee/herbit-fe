@@ -292,6 +292,7 @@ export default function UsernameClient({
       setSuggestions([]);
       return;
     }
+    console.log("[settings/username] request suggestions:", normalizedSeed);
 
     try {
       const response = await apiClient.get(
@@ -313,6 +314,10 @@ export default function UsernameClient({
   useEffect(() => {
     requestSuggestions(currentUsername);
   }, [currentUsername, requestSuggestions]);
+  useEffect(() => {
+    if (!debouncedUsername) return;
+    requestSuggestions(debouncedUsername);
+  }, [debouncedUsername, requestSuggestions]);
 
   const currentUsernameWithAt = currentUsername ? `@${currentUsername}` : "";
 

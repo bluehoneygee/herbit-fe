@@ -85,21 +85,21 @@ export default function PhotoClient({ user }) {
     );
   }, [displayName]);
 
-  const [currentPhoto, setCurrentPhoto] = useState(
-    () => initialPhoto || fallbackPhoto
-  );
-  const [preview, setPreview] = useState(() => initialPhoto || fallbackPhoto);
+  const [currentPhoto, setCurrentPhoto] = useState("");
+  const [preview, setPreview] = useState("");
   const [objectUrl, setObjectUrl] = useState(null);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
+    if (loadingProfile && !profileData) return;
+
     const nextPhoto = initialPhoto || fallbackPhoto;
     setCurrentPhoto(nextPhoto);
     setPreview(nextPhoto);
     setSelectedFile(null);
-  }, [fallbackPhoto, initialPhoto]);
+  }, [fallbackPhoto, initialPhoto, loadingProfile, profileData]);
 
   useEffect(() => {
     return () => {
@@ -218,6 +218,8 @@ export default function PhotoClient({ user }) {
     [currentPhoto, hasChanges, isSaving, objectUrl, router, selectedFile]
   );
 
+  const showPreviewSkeleton = loadingProfile && !preview;
+
   return (
     <main className="min-h-screen bg-white text-[#0A0A19]">
       <form className="flex min-h-screen flex-col" onSubmit={handleSubmit}>
@@ -253,7 +255,9 @@ export default function PhotoClient({ user }) {
             <div className="space-y-3">
               <div className="flex flex-col items-center gap-4">
                 <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-full border border-black/10 shadow-sm bg-[#FEA800]">
-                  {preview === fallbackPhoto ? (
+                  {showPreviewSkeleton ? (
+                    <div className="h-full w-full bg-[#FEA800] animate-pulse" />
+                  ) : preview === fallbackPhoto ? (
                     <span className="text-4xl font-bold text-white">
                       {initials}
                     </span>

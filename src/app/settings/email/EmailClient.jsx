@@ -158,7 +158,8 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
     [isSaving, isUnchanged, isValidEmail, trimmed, router]
   );
 
-  const currentEmailLabel = savedEmail || (loadingEmail ? "Memuat…" : "Belum diatur");
+  const currentEmailLabel =
+    savedEmail || (loadingEmail ? "Memuat…" : "Belum diatur");
   const showStatusIcon = trimmed.length > 0 && !isUnchanged;
   const statusIconSuccess = showStatusIcon ? isValidEmail : undefined;
 
@@ -218,7 +219,7 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 className="flex-1 bg-transparent text-[#0A0A19] placeholder:text-gray-400 focus:outline-none"
-                placeholder="emailkamu@email.com"
+                placeholder="emailbaru@email.com"
               />
               {showStatusIcon && <StatusIcon success={statusIconSuccess} />}
             </label>
