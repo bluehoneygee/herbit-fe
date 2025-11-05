@@ -1,7 +1,7 @@
 // src/app/eco-enzyme/page.jsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import useEcoEnzymeAPI from "@/hooks/useEcoEnzymeAPI";
 import EcoEnzymeCalculator from "@/components/ecoenzyme/EcoEnzymeCalculator";
 import EcoEnzymeProgress from "@/components/ecoenzyme/EcoEnzymeProgress";
@@ -10,12 +10,56 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ChatButton from "@/components/floating-chat/ChatButton";
 import Link from "next/link";
-
-const CURRENT_USER_ID = "69030abde003c64806d5b2bb"; // ganti sesuai auth
+import apiClient from "@/lib/apiClient";
 
 export default function EcoEnzymePage() {
-  const api = useEcoEnzymeAPI(CURRENT_USER_ID);
+  const [userId, setUserId] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [userError, setUserError] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadUser() {
+      try {
+        setUserLoading(true);
+        const response = await apiClient.get("/auth/me", {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const data = response.data ?? {};
+        if (!active) return;
+        const payload = data?.data ?? data;
+        const resolvedId = payload?._id || payload?.id || payload?.user?._id || null;
+        setUserId(resolvedId);
+        setUserError(null);
+      } catch (error) {
+        if (!active) return;
+        console.error("[EcoEnzymePage] gagal mengambil user:", error);
+        setUserError(error instanceof Error ? error.message : String(error));
+        setUserId(null);
+      } finally {
+        if (active) setUserLoading(false);
+      }
+    }
+
+    loadUser();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const api = useEcoEnzymeAPI(userId);
   const [newEntry, setNewEntry] = useState("");
+
+  console.log("[EcoEnzymePage] state", {
+    userId,
+    userLoading,
+    userError,
+    loading: api.loading,
+    error: api.error ? api.error?.message || api.error : null,
+    project: api.project,
+    uploadsCount: api.uploads?.length,
+  });
 
   const handleAddEntry = (e) => {
     e.preventDefault();
@@ -67,7 +111,17 @@ export default function EcoEnzymePage() {
     resetAll: api.resetAll
   }), [api, newEntry]);
 
-  if (api.loading) return <div className="p-8 text-center">Loading...</div>;
+  if (userLoading || api.loading) {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
+
+  if (userError) {
+    return (
+      <div className="p-8 text-center text-red-500">
+        Error: {userError}. Silakan login ulang.
+      </div>
+    );
+  }
 
   if (api.error) {
     console.error("EcoEnzymePage error:", api.error);
