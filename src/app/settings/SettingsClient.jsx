@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import getFallbackAvatar from "@/lib/avatarFallback";
-import { API_BASE_URL } from "@/lib/absoluteUrl";
+import { API_BASE_URL, normalizePhotos } from "@/lib/absoluteUrl";
 import apiClient from "@/lib/apiClient";
 
 function ChevronRightIcon({ size = 16, color = "#9CA3AF" }) {
@@ -53,9 +53,10 @@ export default function SettingsClient({ profile }) {
         });
         const payload = response.data ?? {};
         const data = payload?.data ?? payload ?? null;
+        const normalized = normalizePhotos(data);
         if (!active) return;
-        console.log("[settings] SettingsClient profile (client fetch):", data);
-        setProfileData(data);
+        console.log("[settings] SettingsClient profile (client fetch):", normalized);
+        setProfileData(normalized);
       } catch (error) {
         if (!active) return;
         console.error("[settings] Failed to fetch profile on client:", error);
