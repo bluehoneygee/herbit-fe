@@ -11,21 +11,25 @@ function toLocalShort(d) {
 }
 
 export default function MonthSection({ 
-    month, 
-    summary = { start: 0, end: 0, total: 0, done: 0, pct: 0 }, 
-    monthWeeks = [], 
+    month = 1, 
+    summary, 
+    monthWeeks, 
     startDate = null, 
     currentDayIndex = 0, 
     photos = {}, 
     handleCheckin = () => {}, 
     handlePhotoUpload = () => {},
-    openWeeks = new Set(),
+    openWeeks,
     setOpenWeeks = () => {},
     activeWeekIndex = 0
 }) {
-    const safeSummary = summary || { start: 0, end: 0, total: 0, done: 0, pct: 0 };
+    const safeSummary = summary && typeof summary === "object"
+        ? summary
+        : { start: 0, end: 0, total: 0, done: 0, pct: 0 };
+
     const safeWeeks = Array.isArray(monthWeeks) ? monthWeeks : [];
     const safePhotos = photos || {};
+    const weekSet = openWeeks instanceof Set ? openWeeks : new Set();
     
     const accentColor = month === 1 ? 'bg-blue-600' : month === 2 ? 'bg-purple-600' : 'bg-green-600';
     const accentLightColor = month === 1 ? 'bg-blue-50' : month === 2 ? 'bg-purple-50' : 'bg-green-50';
@@ -73,7 +77,7 @@ export default function MonthSection({
                 <div className="p-4 bg-white space-y-3"> 
                     {safeWeeks.map((w) => {
                         const idx = w.weekIndex ?? 0;
-                        const opened = openWeeks instanceof Set ? openWeeks.has(idx) : false;
+                        const opened = weekSet.has(idx);
                         const days = Array.isArray(w.days) ? w.days : [];
                         const doneCount = days.filter((d) => d.checked).length;
                         const isCurrentWeek = w.weekIndex === activeWeekIndex;
@@ -84,10 +88,12 @@ export default function MonthSection({
                                     <button
                                         className={`w-full text-left p-3 flex items-center gap-3 transition-colors ${opened ? 'bg-white' : ''} hover:bg-gray-100/70`}
                                         onClick={() => {
-                                            const next = new Set(openWeeks);
-                                            if (opened) next.delete(idx);
-                                            else next.add(idx);
-                                            setOpenWeeks(next);
+                                            if (typeof setOpenWeeks === "function") {
+                                                const next = new Set(weekSet);
+                                                if (opened) next.delete(idx);
+                                                else next.add(idx);
+                                                setOpenWeeks(next);
+                                            }
                                         }}
                                     >
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm flex-shrink-0 shadow-md transition-all duration-300 ${
@@ -109,12 +115,12 @@ export default function MonthSection({
                                 </div>
                                 {opened && (
                                     <div className="mt-2 ml-4 sm:ml-14 p-3 border-t border-gray-100 space-y-2 bg-white transition-all duration-500"> 
-                                            {days.map((d) => (
-                                                <DayItem
-                                                    key={d.dayIndex}
-                                                    dayData={d}
-                                                    currentDayIndex={currentDayIndex}
-                                                    photos={safePhotos}
+                                        {days.map((d) => (
+                                            <DayItem
+                                                key={d.dayIndex}
+                                                dayData={d}
+                                                currentDayIndex={currentDayIndex}
+                                                photos={safePhotos}
                                                 handleCheckin={handleCheckin}
                                                 handlePhotoUpload={handlePhotoUpload}
                                             />
