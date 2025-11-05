@@ -12,14 +12,14 @@ function toLocalShort(d) {
 
 export default function MonthSection({ 
     month = 1, 
-    summary, 
-    monthWeeks, 
+    summary = { start: 0, end: 0, total: 0, done: 0, pct: 0 }, 
+    monthWeeks = [], 
     startDate = null, 
     currentDayIndex = 0, 
     photos = {}, 
     handleCheckin = () => {}, 
     handlePhotoUpload = () => {},
-    openWeeks,
+    openWeeks = new Set(),
     setOpenWeeks = () => {},
     activeWeekIndex = 0
 }) {
