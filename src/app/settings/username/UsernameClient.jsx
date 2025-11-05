@@ -315,9 +315,9 @@ export default function UsernameClient({
     requestSuggestions(currentUsername);
   }, [currentUsername, requestSuggestions]);
   useEffect(() => {
-    if (!debouncedUsername) return;
-    requestSuggestions(debouncedUsername);
-  }, [debouncedUsername, requestSuggestions]);
+    if (!trimmed) return;
+    requestSuggestions(trimmed);
+  }, [trimmed, requestSuggestions]);
 
   const currentUsernameWithAt = currentUsername ? `@${currentUsername}` : "";
 
