@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 import getFallbackAvatar from "@/lib/avatarFallback";
-import { toAbsoluteUrl } from "@/lib/absoluteUrl";
+import { normalizePhotos, toAbsoluteUrl } from "@/lib/absoluteUrl";
 
 const rawBase = apiClient?.defaults?.baseURL || "";
 const apiBase = rawBase.replace(/\/+$/, "");
@@ -12,18 +12,65 @@ const apiBase = rawBase.replace(/\/+$/, "");
 export default function PhotoClient({ user }) {
   const router = useRouter();
 
-  const displayName = useMemo(() => {
-    if (user?.displayName) return user.displayName;
-    if (user?.name) return user.name;
-    if (user?.username) return user.username;
-    if (user?.email) return user.email.split("@")[0];
-    return "Teman Herbit";
-  }, [user?.displayName, user?.email, user?.name, user?.username]);
+  const [profileData, setProfileData] = useState(() => user ?? null);
+  const [loadingProfile, setLoadingProfile] = useState(!user);
+  const isInitializing = loadingProfile && !profileData;
 
-  const initialPhoto = toAbsoluteUrl(user?.photoUrl || user?.photo_url || "");
+  useEffect(() => {
+    if (user) {
+      setProfileData(user);
+      setLoadingProfile(false);
+      return;
+    }
+
+    let active = true;
+    setLoadingProfile(true);
+
+    (async () => {
+      try {
+        const response = await apiClient.get("/auth/me", {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const payload = response.data ?? {};
+        const data = normalizePhotos(payload?.data ?? payload ?? {});
+        if (!active) return;
+        console.log("[settings/photo] fetched user:", data);
+        setProfileData(data);
+      } catch (error) {
+        if (!active) return;
+        console.error("[settings/photo] failed to fetch profile:", error);
+      } finally {
+        if (active) setLoadingProfile(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const displayName = useMemo(() => {
+    const source =
+      profileData?.displayName ??
+      profileData?.name ??
+      profileData?.username ??
+      profileData?.email?.split("@")[0] ??
+      "Teman Herbit";
+    return source;
+  }, [
+    profileData?.displayName,
+    profileData?.email,
+    profileData?.name,
+    profileData?.username,
+  ]);
+
   const fallbackPhoto = useMemo(
     () => getFallbackAvatar(displayName, { size: "256" }),
     [displayName]
+  );
+  const initialPhoto = useMemo(
+    () => toAbsoluteUrl(profileData?.photoUrl || profileData?.photo_url || ""),
+    [profileData?.photoUrl, profileData?.photo_url]
   );
   const initials = useMemo(() => {
     const cleaned = displayName.replace(/[^a-zA-Z\s]/g, " ").trim();
@@ -39,9 +86,9 @@ export default function PhotoClient({ user }) {
   }, [displayName]);
 
   const [currentPhoto, setCurrentPhoto] = useState(
-    initialPhoto || fallbackPhoto
+    () => initialPhoto || fallbackPhoto
   );
-  const [preview, setPreview] = useState(initialPhoto || fallbackPhoto);
+  const [preview, setPreview] = useState(() => initialPhoto || fallbackPhoto);
   const [objectUrl, setObjectUrl] = useState(null);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -151,7 +198,7 @@ export default function PhotoClient({ user }) {
 
         setSelectedFile(null);
 
-        const finalPhoto = newPhoto ? toAbsolute(newPhoto) : currentPhoto;
+        const finalPhoto = newPhoto ? toAbsoluteUrl(newPhoto) : currentPhoto;
         setCurrentPhoto(finalPhoto);
         setPreview(finalPhoto);
 
@@ -189,7 +236,7 @@ export default function PhotoClient({ user }) {
             <span className="text-base font-semibold">Perbarui foto</span>
             <button
               type="submit"
-              disabled={isSaving || !hasChanges}
+              disabled={isSaving || !hasChanges || isInitializing}
               className={`text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1DA1F2]/40 ${
                 isSaving || !hasChanges
                   ? "cursor-not-allowed text-gray-400 opacity-70"
@@ -244,6 +291,9 @@ export default function PhotoClient({ user }) {
               >
                 {message}
               </p>
+            )}
+            {isInitializing && !message && (
+              <p className="text-sm text-gray-500">Memuat informasi profil…</p>
             )}
           </div>
         </section>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import apiClient from "@/lib/apiClient";
+import { normalizePhotos } from "@/lib/absoluteUrl";
 
 const CHECK_DELAY = 700;
 
@@ -96,11 +97,44 @@ export default function UsernameClient({
   const [debouncedUsername, setDebouncedUsername] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadingUsername, setLoadingUsername] = useState(!initialUsername);
 
   useEffect(() => {
     const normalized = normalize(initialUsername);
     setCurrentUsername(normalized);
     setUsername(normalized);
+    if (initialUsername) setLoadingUsername(false);
+  }, [initialUsername]);
+
+  useEffect(() => {
+    if (initialUsername) return;
+
+    let active = true;
+    setLoadingUsername(true);
+
+    (async () => {
+      try {
+        const response = await apiClient.get("/auth/me", {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const payload = response.data ?? {};
+        const data = normalizePhotos(payload?.data ?? payload ?? {});
+        if (!active) return;
+        const normalized = normalize(data?.username ?? "");
+        console.log("[settings/username] fetched username:", normalized);
+        setCurrentUsername(normalized);
+        setUsername(normalized);
+      } catch (error) {
+        if (!active) return;
+        console.error("[settings/username] failed to load username:", error);
+      } finally {
+        if (active) setLoadingUsername(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [initialUsername]);
 
   const isUnchanged = useMemo(() => {
@@ -315,9 +349,15 @@ export default function UsernameClient({
         <section className="flex-1 px-4 pb-10">
           <div className="py-6">
             <p className="text-sm font-semibold text-gray-900">Saat ini</p>
-            <p className="mt-2 text-base font-medium text-gray-600">
-              {currentUsernameWithAt || "Belum diatur"}
-            </p>
+            <div className="mt-2 min-h-[24px]">
+              {loadingUsername ? (
+                <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
+              ) : (
+                <p className="text-base font-medium text-gray-600">
+                  {currentUsernameWithAt || "Belum diatur"}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="py-6">
@@ -367,7 +407,14 @@ export default function UsernameClient({
           <div className="py-6">
             <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
               <span className="text-gray-500">Saran:</span>
-              {suggestions.length > 0 ? (
+              {loadingUsername ? (
+                [1, 2, 3].map((id) => (
+                  <span
+                    key={`username-skeleton-${id}`}
+                    className="h-5 w-20 rounded-full bg-gray-200 animate-pulse"
+                  />
+                ))
+              ) : suggestions.length > 0 ? (
                 suggestions.map((suggestion, index) => (
                   <button
                     key={suggestion}

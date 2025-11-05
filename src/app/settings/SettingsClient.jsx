@@ -198,7 +198,11 @@ export default function SettingsClient({ profile }) {
           <div className="flex flex-col">
             <span className="text-xl font-bold">Account</span>
             <span className="text-sm font-medium text-gray-500">
-              @{normalizedUsername || "username"}
+              {showSkeleton ? (
+                <span className="inline-block h-4 w-24 rounded bg-gray-200 animate-pulse" />
+              ) : (
+                <>@{normalizedUsername || "username"}</>
+              )}
             </span>
           </div>
         </div>

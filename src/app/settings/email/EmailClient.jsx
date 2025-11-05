@@ -4,6 +4,7 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import apiClient from "@/lib/apiClient";
+import { normalizePhotos } from "@/lib/absoluteUrl";
 
 const DEBOUNCE_DELAY = 500;
 
@@ -48,6 +49,42 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [debouncedEmail, setDebouncedEmail] = useState("");
+  const [loadingEmail, setLoadingEmail] = useState(!initialEmail);
+
+  useEffect(() => {
+    if (initialEmail) {
+      console.log("[settings/email] initial email from server:", initialEmail);
+      setLoadingEmail(false);
+      return;
+    }
+
+    let active = true;
+    setLoadingEmail(true);
+
+    (async () => {
+      try {
+        const response = await apiClient.get("/auth/me", {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const payload = response.data ?? {};
+        const data = normalizePhotos(payload?.data ?? payload ?? {});
+        if (!active) return;
+        console.log("[settings/email] fetched email:", data?.email);
+        if (data?.email) {
+          setSavedEmail(data.email);
+        }
+      } catch (error) {
+        if (!active) return;
+        console.error("[settings/email] failed to fetch email:", error);
+      } finally {
+        if (active) setLoadingEmail(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [initialEmail]);
 
   const isValidEmail = useMemo(() => {
     if (!trimmed) return false;
@@ -121,7 +158,7 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
     [isSaving, isUnchanged, isValidEmail, trimmed, router]
   );
 
-  const currentEmailLabel = savedEmail || "Belum diatur";
+  const currentEmailLabel = savedEmail || (loadingEmail ? "Memuat…" : "Belum diatur");
   const showStatusIcon = trimmed.length > 0 && !isUnchanged;
   const statusIconSuccess = showStatusIcon ? isValidEmail : undefined;
 
@@ -158,9 +195,15 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
         <section className="flex-1 px-4 pb-10">
           <div className="border-b border-gray-200 py-6">
             <p className="text-sm font-semibold text-gray-900">Saat ini</p>
-            <p className="mt-2 text-base font-medium text-gray-600">
-              {currentEmailLabel}
-            </p>
+            <div className="mt-2 min-h-[24px]">
+              {loadingEmail ? (
+                <div className="h-4 w-40 rounded bg-gray-200 animate-pulse" />
+              ) : (
+                <p className="text-base font-medium text-gray-600">
+                  {currentEmailLabel}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="py-6">
