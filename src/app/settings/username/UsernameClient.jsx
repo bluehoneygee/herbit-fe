@@ -296,7 +296,7 @@ export default function UsernameClient({
 
     try {
       const response = await apiClient.get(
-        "/profile/username-suggestions",
+        "/users/username-suggestions",
         {
           params: { seed: normalizedSeed },
         }
