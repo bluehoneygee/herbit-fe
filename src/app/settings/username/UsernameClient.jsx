@@ -96,6 +96,7 @@ export default function UsernameClient({
   const [availabilityMessage, setAvailabilityMessage] = useState("");
   const [debouncedUsername, setDebouncedUsername] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loadingUsername, setLoadingUsername] = useState(!initialUsername);
 
@@ -295,19 +296,21 @@ export default function UsernameClient({
     console.log("[settings/username] request suggestions:", normalizedSeed);
 
     try {
-      const response = await apiClient.get(
-        "/users/username-suggestions",
-        {
-          params: { seed: normalizedSeed },
-        }
-      );
-      const payload = response.data ?? {};
-      const incoming = Array.isArray(payload?.suggestions)
+      setLoadingSuggestions(true);
+      const response = await apiClient.get("/users/username-suggestions", {
+        params: { seed: `@${normalizedSeed}` },
+      });
+      const payload = response.data ?? [];
+      const incoming = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.suggestions)
         ? payload.suggestions
         : [];
-      setSuggestions(incoming.map((item) => item.replace(/^@+/, "")));
+      setSuggestions(incoming.map((item) => item.toString().replace(/^@+/, "")));
     } catch (error) {
       setSuggestions([]);
+    } finally {
+      setLoadingSuggestions(false);
     }
   }, []);
 
@@ -412,7 +415,7 @@ export default function UsernameClient({
           <div className="py-6">
             <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
               <span className="text-gray-500">Saran:</span>
-              {loadingUsername ? (
+              {loadingUsername || loadingSuggestions ? (
                 [1, 2, 3].map((id) => (
                   <span
                     key={`username-skeleton-${id}`}
