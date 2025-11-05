@@ -51,12 +51,6 @@ function dayIndexToMonth(dayIndex) {
   return Math.min(3, Math.ceil(dayIndex / DAYS_PER_MONTH));
 }
 
-function monthRange(month) {
-  const start = (month - 1) * DAYS_PER_MONTH + 1;
-  const end = Math.min(month * DAYS_PER_MONTH, TOTAL_DAYS);
-  return { start, end };
-}
-
 function getDominantMonth(startDay, endDay) {
   const monthRanges = [
     { month: 1, start: 1, end: DAYS_PER_MONTH },
@@ -246,7 +240,7 @@ export default function TimelinePage() {
     return res?.upload || res;
   }, []);
 
-  const handleCheckin = async () => {
+  const handleCheckin = async (/* dayIndex */) => {
     if (!userId) throw new Error("User belum diketahui.");
     if (!project?._id) throw new Error("Project belum tersedia.");
 
@@ -270,9 +264,17 @@ export default function TimelinePage() {
     return { success: true };
   };
 
-  const handleUploadPhoto = async (monthNumber, photoUrl) => {
+  const handleUploadPhoto = async (monthNumber, file) => {
     if (!userId) throw new Error("User belum diketahui.");
     if (!project?._id) throw new Error("Project belum tersedia.");
+    if (!file) throw new Error("File foto tidak valid.");
+
+    const photoUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error("Gagal membaca file"));
+      reader.readAsDataURL(file);
+    });
 
     const upload = await handleCreateUpload({
       ecoenzimProjectId: project._id,
@@ -365,6 +367,53 @@ export default function TimelinePage() {
     });
   };
 
+  const buildMonthData = useCallback(
+    (monthNumber) => {
+      const startDay = (monthNumber - 1) * DAYS_PER_MONTH + 1;
+      const endDay = Math.min(monthNumber * DAYS_PER_MONTH, TOTAL_DAYS);
+      const totalDays = endDay - startDay + 1;
+      let doneDays = 0;
+      const weeksMap = new Map();
+
+      for (let dayIndex = startDay; dayIndex <= endDay; dayIndex += 1) {
+        const checked = Boolean(checkins[dayIndex]?.checked);
+        if (checked) doneDays += 1;
+
+        const globalWeekIndex = Math.floor((dayIndex - 1) / DAYS_PER_WEEK);
+        if (!weeksMap.has(globalWeekIndex)) {
+          weeksMap.set(globalWeekIndex, {
+            weekIndex: globalWeekIndex,
+            days: [],
+          });
+        }
+
+        weeksMap.get(globalWeekIndex).days.push({
+          dayIndex,
+          label: `Hari ${dayIndex}`,
+          date: startDate ? dayDateFromStart(startDate, dayIndex) : null,
+          unlocked: dayIndex <= currentDayIndex,
+          checked,
+        });
+      }
+
+      return {
+        summary: {
+          start: startDay,
+          end: endDay,
+          total: totalDays,
+          done: doneDays,
+          pct: totalDays > 0 ? Math.round((doneDays / totalDays) * 100) : 0,
+        },
+        weeks: Array.from(weeksMap.values()),
+      };
+    },
+    [checkins, currentDayIndex, startDate]
+  );
+
+  const month1Data = useMemo(() => buildMonthData(1), [buildMonthData]);
+  const month2Data = useMemo(() => buildMonthData(2), [buildMonthData]);
+  const month3Data = useMemo(() => buildMonthData(3), [buildMonthData]);
+
   if (userLoading || loading) {
     return <div className="p-8 text-center">Loading...</div>;
   }
@@ -382,6 +431,25 @@ export default function TimelinePage() {
       <div className="p-8 text-center text-red-500">
         Error: {error.message || String(error)}.
       </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <ToastContainer />
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Belum ada proyek Eco Enzyme aktif
+        </h1>
+        <p className="text-sm text-gray-500">
+          Mulai fermentasi dari halaman Eco Enzyme terlebih dahulu untuk melihat timeline.
+        </p>
+        <Link href="/eco-enzyme">
+          <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+            Kembali ke Eco Enzyme
+          </Button>
+        </Link>
+      </main>
     );
   }
 
@@ -467,30 +535,45 @@ export default function TimelinePage() {
         </div>
 
         <MonthSection
-          monthTitle="Bulan Pertama"
-          monthNumber={1}
-          monthRange={monthRange(1)}
-          photoUrl={photos.month1}
-          uploads={uploads}
-          onUpload={(photoUrl) => handleUploadPhoto(1, photoUrl)}
+          month={1}
+          summary={month1Data.summary}
+          monthWeeks={month1Data.weeks}
+          startDate={startDate}
+          currentDayIndex={currentDayIndex}
+          photos={photos}
+          handleCheckin={handleCheckin}
+          handlePhotoUpload={handleUploadPhoto}
+          openWeeks={openWeeks}
+          setOpenWeeks={setOpenWeeks}
+          activeWeekIndex={activeWeekIndex}
         />
 
         <MonthSection
-          monthTitle="Bulan Kedua"
-          monthNumber={2}
-          monthRange={monthRange(2)}
-          photoUrl={photos.month2}
-          uploads={uploads}
-          onUpload={(photoUrl) => handleUploadPhoto(2, photoUrl)}
+          month={2}
+          summary={month2Data.summary}
+          monthWeeks={month2Data.weeks}
+          startDate={startDate}
+          currentDayIndex={currentDayIndex}
+          photos={photos}
+          handleCheckin={handleCheckin}
+          handlePhotoUpload={handleUploadPhoto}
+          openWeeks={openWeeks}
+          setOpenWeeks={setOpenWeeks}
+          activeWeekIndex={activeWeekIndex}
         />
 
         <MonthSection
-          monthTitle="Bulan Ketiga"
-          monthNumber={3}
-          monthRange={monthRange(3)}
-          photoUrl={photos.month3}
-          uploads={uploads}
-          onUpload={(photoUrl) => handleUploadPhoto(3, photoUrl)}
+          month={3}
+          summary={month3Data.summary}
+          monthWeeks={month3Data.weeks}
+          startDate={startDate}
+          currentDayIndex={currentDayIndex}
+          photos={photos}
+          handleCheckin={handleCheckin}
+          handlePhotoUpload={handleUploadPhoto}
+          openWeeks={openWeeks}
+          setOpenWeeks={setOpenWeeks}
+          activeWeekIndex={activeWeekIndex}
         />
 
         <FinalClaimCard
