@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MaskIcon from "@/components/ui/MaskIcon";
 import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import apiClient from "@/lib/apiClient";
 import { DEFAULT_TABS } from "@/constants";
 
 const AUTH_RESERVED_SEGMENTS = new Set([
@@ -53,19 +55,21 @@ export default function BottomNav({
     }
 
     let cancelled = false;
+    const controller = new AbortController();
+
     async function fetchProfileHref() {
       try {
-        const response = await fetch("/api/summary/home", {
-          cache: "no-store",
+        const response = await apiClient.get("/users/home-summary", {
           headers: { "Cache-Control": "no-cache" },
+          signal: controller.signal,
         });
-        if (!response.ok) return;
-        const data = await response.json();
+        const data = response.data ?? {};
         const fallbackUsername = data?.user?.username ?? null;
         if (!cancelled && fallbackUsername) {
           setProfileHref(`/${fallbackUsername}/aktivitas`);
         }
       } catch (error) {
+        if (axios.isCancel(error)) return;
         // ignore fetch errors silently
       }
     }
@@ -73,6 +77,7 @@ export default function BottomNav({
     fetchProfileHref();
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [username]);
 

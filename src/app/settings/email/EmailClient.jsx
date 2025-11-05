@@ -2,6 +2,8 @@
 
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import apiClient from "@/lib/apiClient";
 
 const DEBOUNCE_DELAY = 500;
 
@@ -82,20 +84,13 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
       try {
         setIsSaving(true);
         setMessage("");
-        const response = await fetch("/api/users/email", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: nextEmail }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json().catch(() => null);
-          const errorMessage =
-            data?.message ||
-            data?.error ||
-            "Gagal memperbarui email. Coba lagi.";
-          throw new Error(errorMessage);
-        }
+        await apiClient.patch(
+          "/users/email",
+          { email: nextEmail },
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
         setSavedEmail(nextEmail);
         setEmail("");
@@ -103,11 +98,22 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
         router.refresh();
         router.push("/");
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Terjadi kesalahan saat memperbarui email.";
-        setMessage(errorMessage);
+        if (axios.isAxiosError(error)) {
+          const payload = error.response?.data ?? {};
+          const message =
+            payload?.message ||
+            payload?.error ||
+            payload?.details ||
+            error.message ||
+            "Gagal memperbarui email. Coba lagi.";
+          setMessage(message);
+        } else {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Terjadi kesalahan saat memperbarui email.";
+          setMessage(errorMessage);
+        }
       } finally {
         setIsSaving(false);
       }

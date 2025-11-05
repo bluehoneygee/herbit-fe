@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import apiClient from "@/lib/apiClient";
 
 const DEFAULT_SUMMARY = {
   user: null,
@@ -19,10 +20,11 @@ export function useHomeSummary() {
   const fetchSummary = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/summary/home", {
+      const response = await apiClient.get("/users/home-summary", {
         headers: { "Cache-Control": "no-cache" },
       });
-      setData({ ...DEFAULT_SUMMARY, ...response.data });
+      const payload = response.data ?? {};
+      setData({ ...DEFAULT_SUMMARY, ...payload });
       setError(null);
     } catch (err) {
       let message = "Unknown error";

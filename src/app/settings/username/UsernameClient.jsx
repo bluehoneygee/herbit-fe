@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import apiClient from "@/lib/apiClient";
 
 const CHECK_DELAY = 700;
 
@@ -154,20 +156,11 @@ export default function UsernameClient({
 
       try {
         setIsSaving(true);
-        const response = await fetch("/api/users/username", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: nextUsername }),
-        });
-
-        if (!response.ok) {
-          const errorPayload = await response.json().catch(() => null);
-          const message =
-            errorPayload?.message ||
-            errorPayload?.error ||
-            "Gagal memperbarui username. Coba lagi.";
-          throw new Error(message);
-        }
+        await apiClient.patch(
+          "/users/username",
+          { username: nextUsername },
+          { headers: { "Content-Type": "application/json" } }
+        );
 
         setCurrentUsername(nextUsernameClean);
         setUsername(nextUsernameClean);
@@ -176,10 +169,19 @@ export default function UsernameClient({
         router.refresh();
         router.push("/");
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Terjadi kesalahan saat memperbarui username.";
+        let message =
+          "Terjadi kesalahan saat memperbarui username.";
+        if (axios.isAxiosError(error)) {
+          const payload = error.response?.data ?? {};
+          message =
+            payload?.message ||
+            payload?.error ||
+            payload?.details ||
+            error.message ||
+            message;
+        } else if (error instanceof Error && error.message) {
+          message = error.message;
+        }
         setAvailabilityStatus("error");
         setAvailabilityMessage(message);
       } finally {
@@ -211,20 +213,17 @@ export default function UsernameClient({
 
     (async () => {
       try {
-        const response = await fetch(
-          `/api/profile/username-availability?username=${encodeURIComponent(
-            nextUsername
-          )}`,
-          { signal: controller.signal }
+        const response = await apiClient.get(
+          "/profile/username-availability",
+          {
+            params: { username: nextUsername },
+            signal: controller.signal,
+          }
         );
 
         if (!isActive) return;
 
-        if (!response.ok) {
-          throw new Error("Failed to check username");
-        }
-
-        const result = await response.json();
+        const result = response.data ?? {};
         const available = Boolean(result?.available);
         setAvailabilityStatus(available ? "available" : "taken");
         setAvailabilityMessage(
@@ -233,7 +232,13 @@ export default function UsernameClient({
             : result?.message ?? "Username sudah digunakan."
         );
       } catch (error) {
-        if (!isActive || controller.signal.aborted) return;
+        if (
+          !isActive ||
+          controller.signal.aborted ||
+          axios.isCancel?.(error)
+        ) {
+          return;
+        }
         setAvailabilityStatus("error");
         setAvailabilityMessage(
           "Tidak dapat memeriksa ketersediaan. Coba lagi."
@@ -255,17 +260,15 @@ export default function UsernameClient({
     }
 
     try {
-      const response = await fetch(
-        `/api/profile/username-suggestions?seed=${encodeURIComponent(
-          normalizedSeed
-        )}`
+      const response = await apiClient.get(
+        "/profile/username-suggestions",
+        {
+          params: { seed: normalizedSeed },
+        }
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch suggestions");
-      }
-      const result = await response.json();
-      const incoming = Array.isArray(result?.suggestions)
-        ? result.suggestions
+      const payload = response.data ?? {};
+      const incoming = Array.isArray(payload?.suggestions)
+        ? payload.suggestions
         : [];
       setSuggestions(incoming.map((item) => item.replace(/^@+/, "")));
     } catch (error) {

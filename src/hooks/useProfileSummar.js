@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import apiClient from "@/lib/apiClient";
 
 const DEFAULT_SUMMARY = {
   user: null,
@@ -18,7 +19,7 @@ export default function useProfileSummary() {
   const loadProfile = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/profile/summary", {
+      const response = await apiClient.get("/users/profile-summary", {
         headers: { "Cache-Control": "no-cache" },
       });
       const data = response.data ?? {};
