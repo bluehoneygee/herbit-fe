@@ -251,8 +251,20 @@ useEffect(() => {
   const daysCompleted = TOTAL_FERMENTATION_DAYS - daysRemaining;
   const progressPct = Math.min(100, Math.round((daysCompleted / TOTAL_FERMENTATION_DAYS) * 100));
 
-  const totalPrePoints = (uploads || []).reduce((s, u) => s + (Number(u.prePointsEarned) || 0), 0);
-  const totalWeightKg = (uploads || []).reduce((s, u) => s + ((Number(u.prePointsEarned) || 0) / 10), 0);
+  const totalPrePoints = (uploads || []).reduce(
+    (sum, u) => sum + (Number(u?.prePointsEarned) || 0),
+    0
+  );
+
+  const totalWeightFromUploads = (uploads || []).reduce(
+    (sum, u) => sum + (Number(u?.prePointsEarned) || 0) / 10,
+    0
+  );
+
+  const organicWeightKg = Number(project?.organicWasteWeight || 0);
+  const totalWeightKg = totalWeightFromUploads > 0
+    ? Math.max(totalWeightFromUploads, organicWeightKg)
+    : organicWeightKg;
 
   const gula = Number(totalWeightKg > 0 ? (totalWeightKg / 3).toFixed(2) : "0.00");
   const air = Number(totalWeightKg > 0 ? (((totalWeightKg / 3) * 10).toFixed(2)) : "0.00");
@@ -267,6 +279,7 @@ useEffect(() => {
   isFinalClaimed: isFinalClaimedState,
   canClaim: canClaimFinal,
   totalWeightKg,
+  organicWeightKg,
   gula,
   air,
   daysRemaining,

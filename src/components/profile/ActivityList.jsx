@@ -277,7 +277,7 @@ function normalizeActivity(activity, index = 0) {
       normalized.description =
         activity.description ??
         (prePointValue > 0
-          ? `Kamu mendapatkan ${prePointValue} prepoint dari proyek eco-enzym.`
+          ? `+${prePointValue} prepoint eco-enzym`
           : "Pre-point eco-enzym diperbarui.");
       normalized.title = activity.title ?? "Pre-point eco-enzym";
       break;

@@ -43,14 +43,33 @@ const JournalSection = ({ journalEntries = [], isFermentationActive, newEntry, s
                 </Button>
             </div>
             <ul className="divide-y max-h-48 overflow-y-auto border rounded-md">
-                {journalEntries.map((e) => (
-                    <li key={e.id} className="py-2 px-3 flex justify-between items-center hover:bg-gray-50">
-                        <span className="text-gray-700 text-sm">{e.date}:</span>
-                        <div className="flex items-center gap-2">
-                            <b className="text-sm">{Number((e.weight || 0) / 1000).toFixed(2)} Kg</b>
-                        </div>
-                    </li>
-                ))}
+                {journalEntries.map((e) => {
+                    const weightKg = (() => {
+                        if (typeof e?.weightKg === "number") {
+                            return e.weightKg;
+                        }
+
+                        if (typeof e?.weight === "number") {
+                            return Number(e.weight) / 1000;
+                        }
+
+                        if (typeof e?.prePointsEarned === "number") {
+                            return Number(e.prePointsEarned) / 10;
+                        }
+
+                        const parsed = Number(e?.prePointsEarned ?? 0);
+                        return Number.isFinite(parsed) ? parsed / 10 : 0;
+                    })();
+
+                    return (
+                        <li key={e.id} className="py-2 px-3 flex justify-between items-center hover:bg-gray-50">
+                            <span className="text-gray-700 text-sm">{e.date}:</span>
+                            <div className="flex items-center gap-2">
+                                <b className="text-sm">{weightKg.toFixed(2)} Kg</b>
+                            </div>
+                        </li>
+                    );
+                })}
             </ul>
         </CardContent>
     </Card>

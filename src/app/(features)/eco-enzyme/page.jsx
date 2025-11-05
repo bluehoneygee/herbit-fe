@@ -90,14 +90,54 @@ export default function EcoEnzymePage() {
     }
   };
 
-  const tracker = React.useMemo(
-    () => ({
-      journalEntries: (api.uploads || []).map((u) => ({
-        id: u._id,
-        date: new Date(u.uploadedDate).toLocaleDateString("id-ID"),
-        weight: ((u.prePointsEarned || 0) / 10) * 1000, // grams? keep consistent with your UI
-      })),
-      totalWeightKg: Number(api.totalWeightKg || 0),
+  const tracker = React.useMemo(() => {
+    const journalEntries = (api.uploads || []).map((u) => {
+      const uploadDate = u?.uploadedDate ? new Date(u.uploadedDate) : null;
+      const weightCandidate =
+        typeof u?.weight === "number"
+          ? u.weight
+        : typeof u?.weightKg === "number"
+          ? u.weightKg
+          : typeof u?.organicWasteWeight === "number"
+          ? u.organicWasteWeight
+          : Number(u?.prePointsEarned || 0) / 10;
+
+      const weightKg = Number.isFinite(weightCandidate)
+        ? Number(weightCandidate)
+        : 0;
+
+      return {
+        id: u?._id || u?.id,
+        date: uploadDate
+          ? uploadDate.toLocaleDateString("id-ID")
+          : "Tanggal tidak diketahui",
+        weightKg,
+        weight: Number.isFinite(weightKg) ? weightKg * 1000 : 0, // keep legacy grams field
+        prePointsEarned: Number(u?.prePointsEarned ?? 0),
+      };
+    });
+
+    const totalWeightKg = Number(api.totalWeightKg || 0);
+    const organicWeightKg = Number(api.organicWeightKg || 0);
+
+    if (journalEntries.length === 0 && organicWeightKg > 0) {
+      const projectDate = api.project?.startDate || api.project?.createdAt;
+      const displayDate = projectDate
+        ? new Date(projectDate).toLocaleDateString("id-ID")
+        : "Fermentasi dimulai";
+
+      journalEntries.push({
+        id: api.project?._id ? `${api.project._id}-initial` : "ecoenzyme-initial",
+        date: displayDate,
+        weightKg: organicWeightKg,
+        weight: organicWeightKg * 1000,
+        prePointsEarned: organicWeightKg * 10,
+      });
+    }
+
+    return {
+      journalEntries,
+      totalWeightKg,
       gula: api.gula,
       air: api.air,
       isFermentationActive: api.isFermentationActive,
@@ -105,16 +145,16 @@ export default function EcoEnzymePage() {
       harvestDate: api.harvestDate,
       daysCompleted: api.daysCompleted,
       progressPct: api.progressPct,
-      totalWeight: (api.totalWeightKg || 0) * 1000,
+      organicWeightKg,
+      totalWeight: totalWeightKg * 1000,
       totalFermentationDays: 90,
       newEntry,
       setNewEntry,
       addEntry: handleAddEntry,
       startFermentation: handleStartFermentation,
       resetAll: api.resetAll,
-    }),
-    [api, newEntry]
-  );
+    };
+  }, [api, newEntry]);
 
   if (userLoading || api.loading) {
     return <div className="p-8 text-center">Loading...</div>;
