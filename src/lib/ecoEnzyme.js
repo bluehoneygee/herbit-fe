@@ -1,7 +1,6 @@
 // src/lib/ecoEnzyme.js
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
 async function request(path, { headers, ...options } = {}) {
   const response = await fetch(`${API_BASE}${path}`, {

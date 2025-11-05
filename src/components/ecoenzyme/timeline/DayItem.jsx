@@ -9,8 +9,12 @@ function toLocalShort(d) {
     return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 }
 
-export default function DayItem({ dayData, currentDayIndex, photos, handleCheckin, handlePhotoUpload }) {
-    const { dayIndex, date, label, unlocked, checked } = dayData;
+export default function DayItem({ dayData, currentDayIndex = 0, photos = {}, handleCheckin = () => {}, handlePhotoUpload = () => {} }) {
+    if (!dayData || typeof dayData !== "object") {
+        return null;
+    }
+
+    const { dayIndex = 0, date = null, label = "", unlocked = false, checked = false } = dayData;
     const isGasDay = dayIndex % 7 === 0;
     const isPhotoDay = dayIndex === 30 || dayIndex === 60 || dayIndex === 90;
     const month = Math.min(3, Math.ceil(dayIndex / 30)); 

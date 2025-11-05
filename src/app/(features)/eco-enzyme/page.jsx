@@ -7,7 +7,7 @@ import EcoEnzymeCalculator from "@/components/ecoenzyme/EcoEnzymeCalculator";
 import EcoEnzymeProgress from "@/components/ecoenzyme/EcoEnzymeProgress";
 import EcoEnzymeSteps from "@/components/ecoenzyme/EcoEnzymeSteps";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import ChatButton from "@/components/floating-chat/ChatButton";
 import Link from "next/link";
 import apiClient from "@/lib/apiClient";
@@ -29,7 +29,8 @@ export default function EcoEnzymePage() {
         const data = response.data ?? {};
         if (!active) return;
         const payload = data?.data ?? data;
-        const resolvedId = payload?._id || payload?.id || payload?.user?._id || null;
+        const resolvedId =
+          payload?._id || payload?.id || payload?.user?._id || null;
         setUserId(resolvedId);
         setUserError(null);
       } catch (error) {
@@ -69,9 +70,10 @@ export default function EcoEnzymePage() {
       return;
     }
 
-    api.addUpload(weight)
+    api
+      .addUpload(weight)
       .then(() => setNewEntry(""))
-      .catch(err => alert("Gagal simpan data: " + (err?.message || err)));
+      .catch((err) => alert("Gagal simpan data: " + (err?.message || err)));
   };
 
   const handleStartFermentation = async () => {
@@ -88,28 +90,31 @@ export default function EcoEnzymePage() {
     }
   };
 
-  const tracker = React.useMemo(() => ({
-    journalEntries: (api.uploads || []).map(u => ({
-      id: u._id,
-      date: new Date(u.uploadedDate).toLocaleDateString("id-ID"),
-      weight: (u.prePointsEarned || 0) / 10 * 1000 // grams? keep consistent with your UI
-    })),
-    totalWeightKg: Number(api.totalWeightKg || 0),
-    gula: api.gula,
-    air: api.air,
-    isFermentationActive: api.isFermentationActive,
-    daysRemaining: api.daysRemaining,
-    harvestDate: api.harvestDate,
-    daysCompleted: api.daysCompleted,
-    progressPct: api.progressPct,
-    totalWeight: (api.totalWeightKg || 0) * 1000,
-    totalFermentationDays: 90,
-    newEntry,
-    setNewEntry,
-    addEntry: handleAddEntry,
-    startFermentation: handleStartFermentation,
-    resetAll: api.resetAll
-  }), [api, newEntry]);
+  const tracker = React.useMemo(
+    () => ({
+      journalEntries: (api.uploads || []).map((u) => ({
+        id: u._id,
+        date: new Date(u.uploadedDate).toLocaleDateString("id-ID"),
+        weight: ((u.prePointsEarned || 0) / 10) * 1000, // grams? keep consistent with your UI
+      })),
+      totalWeightKg: Number(api.totalWeightKg || 0),
+      gula: api.gula,
+      air: api.air,
+      isFermentationActive: api.isFermentationActive,
+      daysRemaining: api.daysRemaining,
+      harvestDate: api.harvestDate,
+      daysCompleted: api.daysCompleted,
+      progressPct: api.progressPct,
+      totalWeight: (api.totalWeightKg || 0) * 1000,
+      totalFermentationDays: 90,
+      newEntry,
+      setNewEntry,
+      addEntry: handleAddEntry,
+      startFermentation: handleStartFermentation,
+      resetAll: api.resetAll,
+    }),
+    [api, newEntry]
+  );
 
   if (userLoading || api.loading) {
     return <div className="p-8 text-center">Loading...</div>;
@@ -125,38 +130,92 @@ export default function EcoEnzymePage() {
 
   if (api.error) {
     console.error("EcoEnzymePage error:", api.error);
-    return <div className="p-8 text-center text-red-500">Error: {(api.error && api.error.message) || String(api.error)}</div>;
+    return (
+      <div className="p-8 text-center text-red-500">
+        Error: {(api.error && api.error.message) || String(api.error)}
+      </div>
+    );
   }
 
+  const fermentationStart = api.project?.startDate
+    ? new Date(api.project.startDate)
+    : null;
+  const fermentationEnd = api.project?.endDate
+    ? new Date(api.project.endDate)
+    : null;
+
   return (
-    <main className="min-h-screen p-4 sm:p-6 lg:py-8 lg:px-8 pb-24">
-      <div className="w-full mx-auto">
-        <div className="flex flex-col gap-2 pb-6 border-b border-gray-200">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="rounded-lg" onClick={() => window.history.back()}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-900">Eco Enzyme</h1>
-          </div>
-{api.isFermentationActive && (
-          <Link href="/eco-enzyme/timeline" className="ml-14 w-full sm:w-auto mt-1">
-            <Button className="bg-violet-600 hover:bg-violet-700 text-white w-full sm:w-auto">
-              Lihat Timeline <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-)}
-          <p className="text-base text-amber-700 font-medium ml-14 mt-1">Yuk Ubah Sampah Dapur Jadi Cairan Ajaib 🌱</p>
+    <main className="min-h-screen bg-white pb-24">
+      <header
+        className="sticky top-0 z-20 bg-white px-4 pb-4 backdrop-blur"
+        style={{ paddingTop: "calc(24px + env(safe-area-inset-top))" }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold text-gray-900">
+            Fermentasi Eco Enzyme
+          </span>
         </div>
 
+        <div className="mt-8 flex items-center justify-between flex-wrap gap-3 text-sm text-gray-600">
+          <div className="flex flex-col">
+            <span>
+              Mulai:
+              <span className="font-semibold text-amber-500 ml-1">
+                {fermentationStart
+                  ? fermentationStart.toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "-"}
+              </span>
+            </span>
+            <span>
+              Panen:
+              <span className="font-semibold text-amber-500 ml-1">
+                {fermentationEnd
+                  ? fermentationEnd.toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "-"}
+              </span>
+            </span>
+          </div>
+          {api.isFermentationActive ? (
+            <Link href="/eco-enzyme/timeline" className="w-auto">
+              <Button className="bg-violet-600 hover:bg-violet-700 text-white font-semibold flex items-center justify-center gap-2 shadow-md transition-transform duration-150 active:scale-95">
+                Lihat Timeline
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              onClick={handleStartFermentation}
+              className="bg-violet-600 hover:bg-violet-700 text-white font-semibold shadow-md transition-transform duration-150 active:scale-95"
+            >
+              Mulai Fermentasi 90 Hari
+            </Button>
+          )}
+        </div>
+
+        <p className="text-base text-amber-700 text-center font-medium mt-4">
+          Yuk ubah sampah dapur jadi cairan ajaib, satu check-in setiap hari!
+        </p>
+      </header>
+
+      <div className="mt-4 space-y-6 px-4">
         <EcoEnzymeProgress {...tracker} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <EcoEnzymeCalculator tracker={tracker} />
         </div>
 
         <EcoEnzymeSteps />
-        <ChatButton />
       </div>
+
+      <ChatButton />
     </main>
   );
 }

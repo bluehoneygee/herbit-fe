@@ -19,7 +19,7 @@ export default function CongratsModal({
 
   const API =
     (process.env.NEXT_PUBLIC_API_URL || "").trim().replace(/\/+$/, "") ||
-    "http://localhost:5000/api";
+    "http://localhost:5001/api";
   useEffect(() => {
     setIsClaimed(alreadyClaimed);
     if (alreadyClaimed) {

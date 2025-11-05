@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
-const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
+const API = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"
+).replace(/\/+$/, "");
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -36,13 +38,17 @@ export default function ForgotPasswordPage() {
       });
 
       const ct = res.headers.get("content-type") || "";
-      const data = ct.includes("application/json") ? await res.json().catch(() => ({})) : null;
+      const data = ct.includes("application/json")
+        ? await res.json().catch(() => ({}))
+        : null;
 
       if (!res.ok) {
         const msg =
           data?.message ||
           data?.error?.details ||
-          (res.status === 404 ? "Email tidak terdaftar." : `Gagal mengirim permintaan (HTTP ${res.status})`);
+          (res.status === 404
+            ? "Email tidak terdaftar."
+            : `Gagal mengirim permintaan (HTTP ${res.status})`);
         throw new Error(msg);
       }
 
@@ -76,7 +82,9 @@ export default function ForgotPasswordPage() {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="email" className="text-sm text-black">Email</label>
+            <label htmlFor="email" className="text-sm text-black">
+              Email
+            </label>
             <input
               id="email"
               type="email"

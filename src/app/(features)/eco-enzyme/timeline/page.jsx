@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import ChatButton from "@/components/floating-chat/ChatButton";
 import {
   useToast,
@@ -14,7 +14,6 @@ import {
 import DayItem from "@/components/ecoenzyme/timeline/DayItem";
 import MonthSection from "@/components/ecoenzyme/timeline/MonthSection";
 import FinalClaimCard from "@/components/ecoenzyme/timeline/FinalClaimCard";
-import TimelineHeader from "@/components/ecoenzyme/timeline/TimelineHeader";
 import TimelineProgressCard from "@/components/ecoenzyme/timeline/TimelineProgressCard";
 import apiClient from "@/lib/apiClient";
 import {
@@ -27,8 +26,18 @@ import {
 const TOTAL_DAYS = 90;
 const DAYS_PER_MONTH = 30;
 const DAYS_PER_WEEK = 7;
-const WEEKS = 13;
 const TOTAL_POINTS = 150;
+
+const formatFullDate = (input) => {
+  if (!input) return "-";
+  const value = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(value.getTime())) return "-";
+  return value.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
 
 // Helper functions
 function startFromHarvestIso(harvestIso) {
@@ -83,7 +92,7 @@ export default function TimelinePage() {
 
   const [now, setNow] = useState(new Date());
   const [openWeeks, setOpenWeeks] = useState(() => new Set([0]));
-  const toast = useToast();
+  const { toasts, push: pushToast, remove: removeToast } = useToast();
 
   useEffect(() => {
     let active = true;
@@ -100,6 +109,7 @@ export default function TimelinePage() {
         if (!active) return;
         setUserId(resolvedId);
         setUserError(null);
+        console.log("[Timeline] loadUser", { resolvedId, payload });
       } catch (err) {
         if (!active) return;
         console.error("[TimelinePage] loadUser error:", err);
@@ -147,6 +157,7 @@ export default function TimelinePage() {
       setLoading(true);
       setError(null);
       const active = await fetchActiveProject();
+      console.log("[Timeline] fetchActiveProject", active);
       if (active) {
         setProject(active);
         const ups = await fetchUploadsByProject(active._id);
@@ -155,8 +166,10 @@ export default function TimelinePage() {
           : Array.isArray(ups?.uploads)
           ? ups.uploads
           : [];
+        console.log("[Timeline] uploads", normalized);
         setUploads(normalized);
       } else {
+        console.log("[Timeline] no active project");
         setProject(null);
         setUploads([]);
       }
@@ -165,7 +178,7 @@ export default function TimelinePage() {
       setError(err instanceof Error ? err : new Error(String(err)));
       setProject(null);
       setUploads([]);
-      toast.push(
+      pushToast(
         "Gagal memuat data: " +
           (err instanceof Error ? err.message : String(err)),
         { duration: 3000 }
@@ -173,7 +186,7 @@ export default function TimelinePage() {
     } finally {
       setLoading(false);
     }
-  }, [fetchActiveProject, toast, userId]);
+  }, [fetchActiveProject, pushToast, userId]);
 
   useEffect(() => {
     loadData();
@@ -347,10 +360,12 @@ export default function TimelinePage() {
         Math.floor((safeHarvestDate - new Date()) / (1000 * 60 * 60 * 24))
       )
     : TOTAL_DAYS;
-  const daysCompleted = TOTAL_DAYS - daysRemaining;
+  const daysCompleted = Math.max(0, TOTAL_DAYS - daysRemaining);
+
+  const totalCheckins = Object.keys(checkins).length;
   const progressPct = Math.min(
     100,
-    Math.round((daysCompleted / TOTAL_DAYS) * 100)
+    Math.round((totalCheckins / TOTAL_DAYS) * 100)
   );
 
   const totalPrePoints = (uploads || []).reduce(
@@ -414,6 +429,16 @@ export default function TimelinePage() {
   const month2Data = useMemo(() => buildMonthData(2), [buildMonthData]);
   const month3Data = useMemo(() => buildMonthData(3), [buildMonthData]);
 
+  console.log("[Timeline] month data", {
+    userId,
+    loading,
+    error,
+    project,
+    month1Data,
+    month2Data,
+    month3Data,
+  });
+
   if (userLoading || loading) {
     return <div className="p-8 text-center">Loading...</div>;
   }
@@ -454,25 +479,47 @@ export default function TimelinePage() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <ToastContainer />
-      <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-200">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-lg"
-          onClick={() => window.history.back()}
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Timeline Eco Enzyme
-        </h1>
-      </div>
+    <main className="min-h-screen bg-white pb-24">
+      <ToastContainer toasts={toasts} remove={removeToast} />
+      <header
+        className="sticky top-0 z-20 bg-white px-4 pb-4 backdrop-blur"
+        style={{ paddingTop: "calc(24px + env(safe-area-inset-top))" }}
+      >
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-lg bg-white shadow-md hover:bg-gray-200 transition-transform hover:scale-[1.05]"
+            onClick={() => window.history.back()}
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-700" />
+          </Button>
+          <span className="text-xl font-bold text-gray-900">
+            Timeline Eco Enzyme
+          </span>
+        </div>
+
+        <div className="mt-6 space-y-1 text-sm text-gray-600">
+          <p>
+            Mulai:{" "}
+            <span className="font-semibold text-amber-500">
+              {formatFullDate(project?.startDate)}
+            </span>
+          </p>
+          <p>
+            Panen:{" "}
+            <span className="font-semibold text-amber-500">
+              {formatFullDate(project?.endDate)}
+            </span>
+          </p>
+        </div>
+
+        <p className="text-base text-amber-700 text-center font-medium mt-4">
+          Pantau progres fermentasi mu setiap hari selama 90 hari penuh!
+        </p>
+      </header>
 
       <section className="px-4 py-6 space-y-4">
-        <TimelineHeader project={project} totalPoints={TOTAL_POINTS} />
-
         <TimelineProgressCard
           currentDayIndex={currentDayIndex}
           totalDays={TOTAL_DAYS}
@@ -483,56 +530,18 @@ export default function TimelinePage() {
           checkins={checkins}
         />
 
-        <div className="grid gap-4">
-          {Array.from({ length: WEEKS }).map((_, idx) => {
-            const rangeStart = idx * DAYS_PER_WEEK + 1;
-            const rangeEnd = Math.min(
-              (idx + 1) * DAYS_PER_WEEK,
-              TOTAL_DAYS
-            );
-            const isOpen = openWeeks.has(idx) || idx === activeWeekIndex;
-
-            return (
-              <Card key={`week-${idx}`} className="border border-gray-200">
-                <button
-                  className="w-full flex items-center justify-between px-4 py-3 text-left"
-                  onClick={() => toggleWeek(idx)}
-                >
-                  <span className="text-sm font-semibold text-gray-900">
-                    Minggu {idx + 1} ({rangeStart}-{rangeEnd})
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {isOpen ? "Sembunyikan" : "Lihat"}
-                  </span>
-                </button>
-                {isOpen && (
-                  <CardContent className="px-4 pb-4">
-                    <div className="grid grid-cols-7 gap-2">
-                      {Array.from(
-                        { length: rangeEnd - rangeStart + 1 },
-                        (_, offset) => {
-                          const dayIndex = rangeStart + offset;
-                          const checked = checkins[dayIndex]?.checked;
-                          const date = startDate
-                            ? dayDateFromStart(startDate, dayIndex)
-                            : null;
-                          return (
-                            <DayItem
-                              key={`day-${dayIndex}`}
-                              dayIndex={dayIndex}
-                              date={date}
-                              checked={checked}
-                            />
-                          );
-                        }
-                      )}
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+        {!uploads.length && (
+          <Card className="border border-dashed border-purple-300 bg-purple-50/40">
+            <CardContent className="px-4 py-6 text-center space-y-2">
+              <h2 className="text-base font-semibold text-purple-700">
+                Belum ada catatan harian
+              </h2>
+              <p className="text-sm text-purple-600">
+                Mulai check-in harian atau unggah aktivitas bulanan di bawah. Timeline akan terisi otomatis begitu kamu menambahkan data.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <MonthSection
           month={1}

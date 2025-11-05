@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 export function useToast() {
     const [toasts, setToasts] = useState([]);
@@ -13,15 +13,19 @@ export function useToast() {
         return () => timers.forEach((t) => clearTimeout(t));
     }, [toasts]);
 
-    const push = (msg, opts = {}) => {
+    const push = useCallback((msg, opts = {}) => {
         const id = Math.random().toString(36).slice(2, 9);
         setToasts((t) => [...t, { id, message: msg, ...opts }]);
-    };
-    const remove = (id) => setToasts((t) => t.filter((x) => x.id !== id));
-    return { toasts, push, remove };
+    }, []);
+
+    const remove = useCallback((id) => {
+        setToasts((t) => t.filter((x) => x.id !== id));
+    }, []);
+
+    return useMemo(() => ({ toasts, push, remove }), [toasts, push, remove]);
 }
 
-export function ToastContainer({ toasts, remove }) {
+export function ToastContainer({ toasts = [], remove = () => {} }) {
     return (
         <div className="fixed right-4 bottom-6 z-50 flex flex-col gap-2 pointer-events-none">
             {toasts.map((t) => (

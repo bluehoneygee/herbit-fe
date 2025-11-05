@@ -32,7 +32,13 @@ const JournalSection = ({ journalEntries = [], isFermentationActive, newEntry, s
             )}
             <div className="flex justify-between items-center mb-4">
                 <p className="text-sm text-gray-600">Total terkumpul: <b>{Number(totalWeightKg || 0).toFixed(2)} Kg</b></p>
-                <Button onClick={resetAll} variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
+                <Button
+                    onClick={resetAll}
+                    variant="ghost"
+                    size="sm"
+                    className={`text-red-500 hover:text-red-600 ${isFermentationActive ? "opacity-60 cursor-not-allowed" : ""}`}
+                    disabled={isFermentationActive}
+                >
                     <Trash2 className="w-4 h-4 mr-1"/> Reset
                 </Button>
             </div>
@@ -92,7 +98,10 @@ const TimerSection = ({ daysRemaining, harvestDate, resetAll }) => (
                         Target Panen: {new Date(harvestDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                     </p>
                     <div className="flex justify-center">
-                        <Button onClick={resetAll} className="mt-4 bg-red-500 hover:bg-red-600 text-white">
+                        <Button
+                            onClick={resetAll}
+                            className="mt-4 bg-red-500 hover:bg-red-600 text-white"
+                        >
                             <Trash2 className="w-4 h-4 mr-1"/> Reset Data
                         </Button>
                     </div>

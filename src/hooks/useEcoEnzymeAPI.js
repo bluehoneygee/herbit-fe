@@ -7,6 +7,7 @@ import {
   fetchUploadsByProject,
   createProject,
   createUpload,
+  deleteProject,
   claimPoints
 } from "@/lib/ecoEnzyme";
 
@@ -280,6 +281,7 @@ useEffect(() => {
   handleCheckin,
   resetAll: async () => {
     if (!project?._id) return;
+    await deleteProject(project._id);
     setProject(null);
     setUploads([]);
   },
