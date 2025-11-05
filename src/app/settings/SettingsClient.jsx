@@ -36,6 +36,8 @@ export default function SettingsClient({ profile }) {
   const [profileError, setProfileError] = useState("");
   const [profileLoading, setProfileLoading] = useState(!profile);
 
+  const showSkeleton = profileLoading && !profileData;
+
   useEffect(() => {
     if (profile) {
       console.log("[settings] SettingsClient profile (from server):", profile);
@@ -204,13 +206,24 @@ export default function SettingsClient({ profile }) {
 
       <section className="px-5 pb-10">
         <div className="mt-8 flex items-center gap-4">
-          <div className="h-20 w-20 overflow-hidden rounded-full border border-black/10">
-            <img
-              src={avatarUrl}
-              alt="Avatar"
-              className="h-full w-full object-cover"
-            />
-          </div>
+          {showSkeleton ? (
+            <>
+              <div className="h-20 w-20 overflow-hidden rounded-full border border-black/10 bg-[#FEA800] animate-pulse" />
+              <div className="flex-1 space-y-3">
+                <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
+                <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
+                <div className="h-3 w-28 rounded bg-gray-200 animate-pulse" />
+              </div>
+            </>
+          ) : (
+            <div className="h-20 w-20 overflow-hidden rounded-full border border-black/10">
+              <img
+                src={avatarUrl}
+                alt="Avatar"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
         </div>
 
         <div className="mt-8 divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
@@ -219,29 +232,34 @@ export default function SettingsClient({ profile }) {
               {profileError}
             </p>
           )}
-          {profileLoading && !resolvedProfile && (
-            <p className="px-4 py-3 text-sm text-gray-500">
-              Memuat data akun…
-            </p>
-          )}
-          {summary.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => router.push(item.href)}
-              className="flex w-full items-center justify-between px-4 py-5 text-left transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FACC15]"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[#0A0A19]">
-                  {item.label}
-                </p>
-                <p className="mt-1 truncate text-sm text-gray-500">
-                  {item.value}
-                </p>
-              </div>
-              <ChevronRightIcon size={18} color="#9CA3AF" />
-            </button>
-          ))}
+          {showSkeleton
+            ? [1, 2, 3].map((id) => (
+                <div
+                  key={`settings-skeleton-${id}`}
+                  className="px-4 py-5 text-left"
+                >
+                  <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
+                  <div className="mt-2 h-3 w-48 rounded bg-gray-200 animate-pulse" />
+                </div>
+              ))
+            : summary.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => router.push(item.href)}
+                  className="flex w-full items-center justify-between px-4 py-5 text-left transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FACC15]"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#0A0A19]">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 truncate text-sm text-gray-500">
+                      {item.value}
+                    </p>
+                  </div>
+                  <ChevronRightIcon size={18} color="#9CA3AF" />
+                </button>
+              ))}
         </div>
 
         {logoutError && (
