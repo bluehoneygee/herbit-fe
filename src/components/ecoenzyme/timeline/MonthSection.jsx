@@ -12,17 +12,20 @@ function toLocalShort(d) {
 
 export default function MonthSection({ 
     month, 
-    summary, 
+    summary = { start: 0, end: 0, total: 0, done: 0, pct: 0 }, 
     monthWeeks = [], 
-    startDate, 
-    currentDayIndex, 
+    startDate = null, 
+    currentDayIndex = 0, 
     photos = {}, 
-    handleCheckin, 
-    handlePhotoUpload,
-    openWeeks,
-    setOpenWeeks,
-    activeWeekIndex
+    handleCheckin = () => {}, 
+    handlePhotoUpload = () => {},
+    openWeeks = new Set(),
+    setOpenWeeks = () => {},
+    activeWeekIndex = 0
 }) {
+    const safeSummary = summary || { start: 0, end: 0, total: 0, done: 0, pct: 0 };
+    const safeWeeks = Array.isArray(monthWeeks) ? monthWeeks : [];
+    const safePhotos = photos || {};
     
     const accentColor = month === 1 ? 'bg-blue-600' : month === 2 ? 'bg-purple-600' : 'bg-green-600';
     const accentLightColor = month === 1 ? 'bg-blue-50' : month === 2 ? 'bg-purple-50' : 'bg-green-50';
@@ -47,35 +50,36 @@ export default function MonthSection({
                             </div>
                             <div>
                                 <div className={`text-xl font-extrabold ${accentTextColor}`}>Fase Bulan {month}</div>
-                                <div className="text-sm text-gray-600">Hari {summary.start} ({toLocalShort(dayDateFromStart(startDate, summary.start))}) - {summary.end}</div>
+                                <div className="text-sm text-gray-600">Hari {safeSummary.start} ({startDate ? toLocalShort(dayDateFromStart(startDate, safeSummary.start)) : "-"}) - {safeSummary.end}</div>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                             <div className="text-base font-bold text-gray-800">
-                                {summary.done}/{summary.total} Hari
+                                {safeSummary.done}/{safeSummary.total} Hari
                             </div>
                             <div className="w-36">
                                 <div className="w-full bg-gray-300 rounded-full h-2.5 overflow-hidden">
                                     <div 
                                         className={`h-2.5 ${accentColor} transition-all duration-1000 ease-out`} 
-                                        style={{ width: `${summary.pct}%` }} 
+                                        style={{ width: `${safeSummary.pct || 0}%` }} 
                                     />
                                 </div>
-                                <div className="text-xs text-right text-gray-600 mt-1 font-bold">{summary.pct}%</div>
+                                <div className="text-xs text-right text-gray-600 mt-1 font-bold">{safeSummary.pct || 0}%</div>
                             </div>
                         </div>
                     </div>
                 </CardContent>
                 
                 <div className="p-4 bg-white space-y-3"> 
-                    {monthWeeks.map((w) => {
-                        const idx = w.weekIndex;
-                        const opened = openWeeks.has(idx);
-                        const doneCount = w.days.filter((d) => d.checked).length;
+                    {safeWeeks.map((w) => {
+                        const idx = w.weekIndex ?? 0;
+                        const opened = openWeeks instanceof Set ? openWeeks.has(idx) : false;
+                        const days = Array.isArray(w.days) ? w.days : [];
+                        const doneCount = days.filter((d) => d.checked).length;
                         const isCurrentWeek = w.weekIndex === activeWeekIndex;
                         
                         return (
-                            <div key={w.weekIndex} className="border border-gray-200 rounded-xl shadow-sm overflow-hidden bg-gray-50 hover:bg-white transition-all duration-300">
+                            <div key={w.weekIndex ?? idx} className="border border-gray-200 rounded-xl shadow-sm overflow-hidden bg-gray-50 hover:bg-white transition-all duration-300">
                                 <div className="flex items-center justify-between">
                                     <button
                                         className={`w-full text-left p-3 flex items-center gap-3 transition-colors ${opened ? 'bg-white' : ''} hover:bg-gray-100/70`}
@@ -93,7 +97,7 @@ export default function MonthSection({
                                         </div>
                                         <div className="flex-1">
                                             <div className="text-base font-bold text-gray-800">Minggu {w.weekIndex + 1}</div>
-                                            <div className="text-xs text-gray-500">{doneCount}/{w.days.length} hari selesai</div>
+                                            <div className="text-xs text-gray-500">{doneCount}/{days.length} hari selesai</div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-xs font-semibold text-amber-500">{isCurrentWeek ? "AKTIF" : ""}</div>
@@ -105,12 +109,12 @@ export default function MonthSection({
                                 </div>
                                 {opened && (
                                     <div className="mt-2 ml-4 sm:ml-14 p-3 border-t border-gray-100 space-y-2 bg-white transition-all duration-500"> 
-                                        {w.days.map((d) => (
-                                            <DayItem
-                                                key={d.dayIndex}
-                                                dayData={d}
-                                                currentDayIndex={currentDayIndex}
-                                                photos={photos}
+                                            {days.map((d) => (
+                                                <DayItem
+                                                    key={d.dayIndex}
+                                                    dayData={d}
+                                                    currentDayIndex={currentDayIndex}
+                                                    photos={safePhotos}
                                                 handleCheckin={handleCheckin}
                                                 handlePhotoUpload={handlePhotoUpload}
                                             />
