@@ -18,6 +18,7 @@ export default function ProfileLayoutClient({ params, children }) {
   const { summary, loading, error, refetch } = useProfileSummary();
 
   console.log("PROFILEEE:", summary);
+  console.log("Profile params:", params);
 
   const tabs = summary?.tabs?.length ? summary.tabs : DEFAULT_TABS;
   const activeTab = useMemo(() => {

@@ -17,10 +17,8 @@ export function middleware(req) {
   const isAuthRoute = AUTH_ROUTES.has(pathname);
 
   if (!token && isProtected) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    // Allow the request through so client-side fetches can handle auth state.
+    return NextResponse.next();
   }
 
   if (token && isAuthRoute) {
