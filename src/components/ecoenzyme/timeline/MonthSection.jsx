@@ -28,8 +28,12 @@ export default function MonthSection({
         : { start: 0, end: 0, total: 0, done: 0, pct: 0 };
 
     const safeWeeks = Array.isArray(monthWeeks) ? monthWeeks : [];
-    const safePhotos = photos || {};
+    const safePhotos = photos && typeof photos === "object" ? photos : {};
     const weekSet = openWeeks instanceof Set ? openWeeks : new Set();
+
+    if (!safeWeeks.length) {
+        return null;
+    }
     
     const accentColor = month === 1 ? 'bg-blue-600' : month === 2 ? 'bg-purple-600' : 'bg-green-600';
     const accentLightColor = month === 1 ? 'bg-blue-50' : month === 2 ? 'bg-purple-50' : 'bg-green-50';
