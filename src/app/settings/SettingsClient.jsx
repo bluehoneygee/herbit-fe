@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import getFallbackAvatar from "@/lib/avatarFallback";
 import { API_BASE_URL } from "@/lib/absoluteUrl";
+import apiClient from "@/lib/apiClient";
 
 function ChevronRightIcon({ size = 16, color = "#9CA3AF" }) {
   return (
@@ -29,13 +30,54 @@ function ChevronRightIcon({ size = 16, color = "#9CA3AF" }) {
 export default function SettingsClient({ profile }) {
   const router = useRouter();
 
-  console.log("[settings] SettingsClient profile:", profile);
-
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [profileData, setProfileData] = useState(profile ?? null);
+  const [profileError, setProfileError] = useState("");
+  const [profileLoading, setProfileLoading] = useState(!profile);
 
-  const username = profile?.username ?? "";
-  const email = profile?.email ?? "";
+  useEffect(() => {
+    if (profile) {
+      console.log("[settings] SettingsClient profile (from server):", profile);
+      return;
+    }
+
+    let active = true;
+    setProfileLoading(true);
+    setProfileError("");
+
+    (async () => {
+      try {
+        const response = await apiClient.get("/auth/me", {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const payload = response.data ?? {};
+        const data = payload?.data ?? payload ?? null;
+        if (!active) return;
+        console.log("[settings] SettingsClient profile (client fetch):", data);
+        setProfileData(data);
+      } catch (error) {
+        if (!active) return;
+        console.error("[settings] Failed to fetch profile on client:", error);
+        setProfileError(
+          error instanceof Error ? error.message : "Gagal memuat profil."
+        );
+        setProfileData(null);
+      } finally {
+        if (active) setProfileLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [profile]);
+
+  const resolvedProfile = profileData;
+  console.log("[settings] SettingsClient profile (resolved):", resolvedProfile);
+
+  const username = resolvedProfile?.username ?? "";
+  const email = resolvedProfile?.email ?? "";
 
   const normalizedUsername = useMemo(() => {
     if (!username) return "";
@@ -45,18 +87,23 @@ export default function SettingsClient({ profile }) {
   }, [username]);
 
   const displayName = useMemo(() => {
-    if (profile?.displayName) return profile.displayName;
-    if (profile?.name) return profile.name;
-    if (profile?.username) return profile.username;
-    if (profile?.email) return profile.email.split("@")[0];
+    if (resolvedProfile?.displayName) return resolvedProfile.displayName;
+    if (resolvedProfile?.name) return resolvedProfile.name;
+    if (resolvedProfile?.username) return resolvedProfile.username;
+    if (resolvedProfile?.email) return resolvedProfile.email.split("@")[0];
     return "Teman Herbit";
-  }, [profile?.displayName, profile?.email, profile?.name, profile?.username]);
+  }, [
+    resolvedProfile?.displayName,
+    resolvedProfile?.email,
+    resolvedProfile?.name,
+    resolvedProfile?.username,
+  ]);
 
   const avatarUrl = useMemo(() => {
-    if (profile?.photoUrl) return profile.photoUrl;
-    if (profile?.photo_url) return profile.photo_url;
+    if (resolvedProfile?.photoUrl) return resolvedProfile.photoUrl;
+    if (resolvedProfile?.photo_url) return resolvedProfile.photo_url;
     return getFallbackAvatar(displayName);
-  }, [displayName, profile?.photoUrl, profile?.photo_url]);
+  }, [displayName, resolvedProfile?.photoUrl, resolvedProfile?.photo_url]);
 
   const handleLogout = useCallback(async () => {
     if (logoutLoading) return;
@@ -94,7 +141,7 @@ export default function SettingsClient({ profile }) {
         id: "photo",
         label: "Foto profil",
         value:
-          profile?.photoUrl || profile?.photo_url
+          resolvedProfile?.photoUrl || resolvedProfile?.photo_url
             ? "Perbarui foto"
             : "Belum diatur",
         href: "/settings/photo",
@@ -112,7 +159,7 @@ export default function SettingsClient({ profile }) {
         href: "/settings/email",
       },
     ],
-    [email, normalizedUsername, profile?.photoUrl, profile?.photo_url]
+    [email, normalizedUsername, resolvedProfile?.photoUrl, resolvedProfile?.photo_url]
   );
 
   return (
@@ -166,6 +213,16 @@ export default function SettingsClient({ profile }) {
         </div>
 
         <div className="mt-8 divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
+          {profileError && (
+            <p className="px-4 py-3 text-sm text-red-500">
+              {profileError}
+            </p>
+          )}
+          {profileLoading && !resolvedProfile && (
+            <p className="px-4 py-3 text-sm text-gray-500">
+              Memuat data akun…
+            </p>
+          )}
           {summary.map((item) => (
             <button
               key={item.id}
