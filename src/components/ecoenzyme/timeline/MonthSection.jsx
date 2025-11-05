@@ -13,10 +13,10 @@ function toLocalShort(d) {
 export default function MonthSection({ 
     month, 
     summary, 
-    monthWeeks, 
+    monthWeeks = [], 
     startDate, 
     currentDayIndex, 
-    photos, 
+    photos = {}, 
     handleCheckin, 
     handlePhotoUpload,
     openWeeks,
