@@ -229,7 +229,6 @@ export default function RewardsPanel({
         }
         const normalized = normalizeRedemption(detail, fallback);
         setRedeemResult(normalized);
-        console.log("[RewardsPanel] history detail", normalized);
       } catch (error) {
         console.error("[RewardsPanel] gagal memuat detail riwayat", error);
       } finally {

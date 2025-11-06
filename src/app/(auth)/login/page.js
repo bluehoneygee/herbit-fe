@@ -49,16 +49,13 @@ export default function LoginPage() {
               ? "Input tidak valid."
               : `Login gagal (HTTP ${res.status})`);
         }
-        console.log("[LOGIN] failed:", res.status, msg);
         throw new Error(msg);
       }
 
-      console.log("[LOGIN] success");
       localStorage.setItem("herbit_onboarding_v1", "1");
 
       router.replace("/");
     } catch (e) {
-      console.log("[LOGIN] error:", e?.message);
       setErr(e.message || "Login gagal. Coba lagi ya.");
     } finally {
       setLoading(false);

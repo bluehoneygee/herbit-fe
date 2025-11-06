@@ -29,7 +29,6 @@ export default function useProfileSummary() {
           ? payload.data
           : payload;
       const normalizedData = normalizePhotos({ ...DEFAULT_SUMMARY, ...data });
-      console.log("Profile summary API data: ", normalizedData);
       const rawMilestone = normalizedData?.rewards?.milestone;
       const milestones = Array.isArray(rawMilestone)
         ? rawMilestone

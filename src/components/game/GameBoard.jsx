@@ -98,7 +98,6 @@ export default function GameBoard() {
   };
   const refreshUser = useCallback(async () => {
     const me = await getMe();
-    console.log("🔄 Refresh user:", me);
     setServerStreak(me.sortingStreak ?? 0);
     setTotalPoints(me.totalPoints ?? 0);
   }, []);
@@ -126,10 +125,8 @@ export default function GameBoard() {
           );
           setAlreadyClaimed(!!rewardCheck.alreadyClaimed);
         } catch {
-          console.log("ℹ️ No reward claimed yet");
           setAlreadyClaimed(false);
         }
-        console.log("✅ Game initialized successfully");
       } catch (err) {
         console.error("❌ Error init game:", err);
       }
@@ -203,18 +200,13 @@ export default function GameBoard() {
   async function handleClaim() {
     if (!sessionId) return;
     try {
-      console.log("🎯 Claiming reward for session:", sessionId);
-
       const { data } = await apiClient.post(`/game/claim/${sessionId}`);
-      console.log("📦 Claim response:", data);
 
       const user = data.user || {};
       setTotalPoints(user.totalPoints ?? 0);
       setServerStreak(user.sortingStreak ?? 0);
       setAlreadyClaimed(true);
       await refreshUser();
-
-      console.log("Claim success! New total points:", user.totalPoints);
 
       return data;
     } catch (err) {

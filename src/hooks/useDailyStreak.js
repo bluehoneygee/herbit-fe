@@ -10,7 +10,6 @@ export default function useDailyStreak() {
       try {
         const me = await getMe();
         // coba log dulu
-        console.log("[useDailyStreak] me:", me);
 
         // cek dua kemungkinan bentuk data
         const user = me.user || me;

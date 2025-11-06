@@ -166,7 +166,6 @@ const handleCheckin = async () => {
     const today = new Date().toDateString();
     const already = uploads.some(u => new Date(u.uploadedDate).toDateString() === today && !u.monthNumber);
     if (already) {
-      console.log("Hari ini sudah check-in ✅");
       return { success: false, message: "Sudah check-in hari ini" };
     }
 
@@ -182,7 +181,6 @@ const handleCheckin = async () => {
     // ✅ Direct update to UI
     setUploads(prev => [upload, ...prev]);
 
-    console.log("Check-in berhasil! ✅");
     return { success: true };
   } catch (err) {
     console.error("Checkin error:", err);

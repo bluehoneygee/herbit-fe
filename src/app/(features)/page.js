@@ -20,8 +20,6 @@ export default function HomePage() {
     rewardsBanners = [],
     habitsToday = [],
   } = summary ?? {};
-  console.log("Home summary data:", summary);
-
   const progressData = useMemo(() => {
     const total = progress?.total ?? 0;
     const completed = progress?.completed ?? 0;

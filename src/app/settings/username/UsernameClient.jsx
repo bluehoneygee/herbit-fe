@@ -123,7 +123,6 @@ export default function UsernameClient({
         const data = normalizePhotos(payload?.data ?? payload ?? {});
         if (!active) return;
         const normalized = normalize(data?.username ?? "");
-        console.log("[settings/username] fetched username:", normalized);
         setCurrentUsername(normalized);
         setUsername(normalized);
       } catch (error) {
@@ -294,7 +293,6 @@ export default function UsernameClient({
       }
       return;
     }
-    console.log("[settings/username] request suggestions:", normalizedSeed);
 
     setSuggestionsLoading(true);
 

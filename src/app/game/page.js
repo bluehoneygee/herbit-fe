@@ -11,7 +11,6 @@ export default function Game() {
   const [screen, setScreen] = useState("splash"); // "splash" | "dialogue" | "board"
   const router = useRouter();
   const handleAnimationComplete = () => {
-    console.log("All letters have animated!");
   };
 
   return (

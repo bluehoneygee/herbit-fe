@@ -3,13 +3,10 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     const { prompt } = await req.json();
-    console.log("Prompt diterima:", prompt);
 
     const apiKey = process.env.GEMINI_API_KEY;
-    console.log("API Key ada:", !!apiKey);
 
-     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-    console.log("URL:", apiUrl);
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -19,8 +16,7 @@ export async function POST(req) {
       }),
     });
 
-    const text = await response.text(); 
-    console.log("Raw response:", text);
+    const text = await response.text();
 
     const data = JSON.parse(text);
 

@@ -108,7 +108,6 @@ export default function TimelinePage() {
         if (!active) return;
         setUserId(resolvedId);
         setUserError(null);
-        console.log("[Timeline] loadUser", { resolvedId, payload });
       } catch (err) {
         if (!active) return;
         console.error("[TimelinePage] loadUser error:", err);
@@ -156,7 +155,6 @@ export default function TimelinePage() {
       setLoading(true);
       setError(null);
       const active = await fetchActiveProject();
-      console.log("[Timeline] fetchActiveProject", active);
       if (active) {
         setProject(active);
         const ups = await fetchUploadsByProject(active._id);
@@ -165,10 +163,8 @@ export default function TimelinePage() {
           : Array.isArray(ups?.uploads)
           ? ups.uploads
           : [];
-        console.log("[Timeline] uploads", normalized);
         setUploads(normalized);
       } else {
-        console.log("[Timeline] no active project");
         setProject(null);
         setUploads([]);
       }
@@ -428,7 +424,6 @@ export default function TimelinePage() {
   const month2Data = useMemo(() => buildMonthData(2), [buildMonthData]);
   const month3Data = useMemo(() => buildMonthData(3), [buildMonthData]);
 
-  console.log("[Timeline] month data", {
     userId,
     loading,
     error,

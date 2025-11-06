@@ -288,7 +288,6 @@ export default function NotificationPage() {
       if (res.ok) {
         setItems([]);
         setShowModal(false);
-        console.log("✅ Semua notifikasi berhasil dihapus");
         if (typeof window !== "undefined") {
           const nowIso = new Date().toISOString();
           window.localStorage.setItem("notification:lastReadAt", nowIso);
@@ -306,7 +305,6 @@ export default function NotificationPage() {
   };
 
   useEffect(() => {
-    console.log("[Notifications] API =", API);
     fetchData();
   }, [fetchData]);
 

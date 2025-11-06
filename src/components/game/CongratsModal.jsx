@@ -37,7 +37,6 @@ export default function CongratsModal({
 
   // Debug log
   // useEffect(() => {
-  //   console.log("🎨 CongratsModal State:", {
   //     alreadyClaimed,
   //     claimPoints,
   //     currentPoints,
@@ -79,16 +78,13 @@ export default function CongratsModal({
     setIsClaiming(true);
     try {
       if (onClaim) {
-        console.log("Calling onClaim...");
         const result = await onClaim();
 
-        console.log("Claim result:", result);
 
         if (result?.ok && result?.user) {
           const newPoints = result.user.totalPoints || 0;
           setUserPoints(newPoints);
           animateNumber(userPoints, newPoints, 600, setUserPoints);
-          console.log(`Points updated: ${userPoints} → ${newPoints}`);
         } else {
           console.warn("⚠️ No user data in response, fetching fresh...");
           await fetchUserPoints();

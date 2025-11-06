@@ -52,16 +52,6 @@ export default function EcoEnzymePage() {
   const api = useEcoEnzymeAPI(userId);
   const [newEntry, setNewEntry] = useState("");
 
-  console.log("[EcoEnzymePage] state", {
-    userId,
-    userLoading,
-    userError,
-    loading: api.loading,
-    error: api.error ? api.error?.message || api.error : null,
-    project: api.project,
-    uploadsCount: api.uploads?.length,
-  });
-
   const handleAddEntry = (e) => {
     e.preventDefault();
     const weight = parseFloat(newEntry);

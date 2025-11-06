@@ -53,7 +53,6 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
 
   useEffect(() => {
     if (initialEmail) {
-      console.log("[settings/email] initial email from server:", initialEmail);
       setLoadingEmail(false);
       return;
     }
@@ -69,7 +68,6 @@ export default function EmailClient({ currentEmail: initialEmail = "" }) {
         const payload = response.data ?? {};
         const data = normalizePhotos(payload?.data ?? payload ?? {});
         if (!active) return;
-        console.log("[settings/email] fetched email:", data?.email);
         if (data?.email) {
           setSavedEmail(data.email);
         }

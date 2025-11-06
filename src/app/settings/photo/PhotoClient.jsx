@@ -34,7 +34,6 @@ export default function PhotoClient({ user }) {
         const payload = response.data ?? {};
         const data = normalizePhotos(payload?.data ?? payload ?? {});
         if (!active) return;
-        console.log("[settings/photo] fetched user:", data);
         setProfileData(data);
       } catch (error) {
         if (!active) return;

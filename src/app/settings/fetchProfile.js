@@ -10,7 +10,6 @@ export async function fetchProfile() {
       .map(({ name, value }) => `${name}=${value}`)
       .join("; ");
 
-    console.log("[settings] Cookie header:", cookieHeader);
 
     const response = await apiClient.get("/auth/me", {
       headers: {
@@ -20,7 +19,6 @@ export async function fetchProfile() {
     });
 
     const payload = response.data ?? {};
-    console.log("[settings] /auth/me raw payload:", payload);
     const data = payload?.data ?? payload ?? null;
 
     return normalizePhotos(data);

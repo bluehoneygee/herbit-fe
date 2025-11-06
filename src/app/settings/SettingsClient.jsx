@@ -40,7 +40,6 @@ export default function SettingsClient({ profile }) {
 
   useEffect(() => {
     if (profile) {
-      console.log("[settings] SettingsClient profile (from server):", profile);
       return;
     }
 
@@ -57,10 +56,6 @@ export default function SettingsClient({ profile }) {
         const data = payload?.data ?? payload ?? null;
         const normalized = normalizePhotos(data);
         if (!active) return;
-        console.log(
-          "[settings] SettingsClient profile (client fetch):",
-          normalized
-        );
         setProfileData(normalized);
       } catch (error) {
         if (!active) return;
@@ -80,7 +75,6 @@ export default function SettingsClient({ profile }) {
   }, [profile]);
 
   const resolvedProfile = profileData;
-  console.log("[settings] SettingsClient profile (resolved):", resolvedProfile);
 
   const username = resolvedProfile?.username ?? "";
   const email = resolvedProfile?.email ?? "";
