@@ -51,7 +51,7 @@ export default function RewardsMilestone({
       : null;
   const title = activeItem.name ?? "Selamat";
   const subtitle = isClaimed
-    ? "Reward sudah diklaim"
+    ? "Berhasil diklaim!"
     : canClaim
     ? "Siap klaim!"
     : current > 0

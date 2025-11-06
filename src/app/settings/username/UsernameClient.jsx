@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import apiClient from "@/lib/apiClient";
@@ -96,8 +96,10 @@ export default function UsernameClient({
   const [availabilityMessage, setAvailabilityMessage] = useState("");
   const [debouncedUsername, setDebouncedUsername] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loadingUsername, setLoadingUsername] = useState(!initialUsername);
+  const suggestionsRequestIdRef = useRef(0);
 
   useEffect(() => {
     const normalized = normalize(initialUsername);
@@ -137,15 +139,18 @@ export default function UsernameClient({
     };
   }, [initialUsername]);
 
+  const normalizedTrimmed = useMemo(() => normalize(trimmed), [trimmed]);
+
   const isUnchanged = useMemo(() => {
+    if (!normalizedTrimmed) return true;
     if (!currentUsername) return false;
-    return normalize(trimmed) === currentUsername;
-  }, [currentUsername, trimmed]);
+    return normalizedTrimmed === currentUsername;
+  }, [currentUsername, normalizedTrimmed]);
 
   useEffect(() => {
     if (!trimmed) {
-      setAvailabilityStatus("idle");
-      setAvailabilityMessage("");
+      setAvailabilityStatus("unchanged");
+      setAvailabilityMessage("Username belum diubah.");
       setDebouncedUsername("");
       return;
     }
@@ -185,7 +190,7 @@ export default function UsernameClient({
         return;
       }
 
-      const nextUsernameClean = normalize(trimmed);
+      const nextUsernameClean = normalizedTrimmed;
       const nextUsername = `@${nextUsernameClean}`;
 
       try {
@@ -203,8 +208,7 @@ export default function UsernameClient({
         router.refresh();
         router.push("/");
       } catch (error) {
-        let message =
-          "Terjadi kesalahan saat memperbarui username.";
+        let message = "Terjadi kesalahan saat memperbarui username.";
         if (axios.isAxiosError(error)) {
           const payload = error.response?.data ?? {};
           message =
@@ -222,7 +226,7 @@ export default function UsernameClient({
         setIsSaving(false);
       }
     },
-    [availabilityStatus, isSaving, isUnchanged, isValid, router, trimmed]
+    [availabilityStatus, isSaving, isUnchanged, isValid, router, normalizedTrimmed]
   );
 
   useEffect(() => {
@@ -247,13 +251,10 @@ export default function UsernameClient({
 
     (async () => {
       try {
-        const response = await apiClient.get(
-          "/profile/username-availability",
-          {
-            params: { username: nextUsername },
-            signal: controller.signal,
-          }
-        );
+        const response = await apiClient.get("/profile/username-availability", {
+          params: { username: nextUsername },
+          signal: controller.signal,
+        });
 
         if (!isActive) return;
 
@@ -266,11 +267,7 @@ export default function UsernameClient({
             : result?.message ?? "Username sudah digunakan."
         );
       } catch (error) {
-        if (
-          !isActive ||
-          controller.signal.aborted ||
-          axios.isCancel?.(error)
-        ) {
+        if (!isActive || controller.signal.aborted || axios.isCancel?.(error)) {
           return;
         }
         setAvailabilityStatus("error");
@@ -288,26 +285,47 @@ export default function UsernameClient({
 
   const requestSuggestions = useCallback(async (seed) => {
     const normalizedSeed = normalize(seed);
+    const requestId = ++suggestionsRequestIdRef.current;
+
     if (!normalizedSeed) {
-      setSuggestions([]);
+      if (suggestionsRequestIdRef.current === requestId) {
+        setSuggestions([]);
+        setSuggestionsLoading(false);
+      }
       return;
     }
     console.log("[settings/username] request suggestions:", normalizedSeed);
 
+    setSuggestionsLoading(true);
+
     try {
-      const response = await apiClient.get(
-        "/users/username-suggestions",
-        {
-          params: { seed: normalizedSeed },
-        }
-      );
-      const payload = response.data ?? {};
-      const incoming = Array.isArray(payload?.suggestions)
+      const response = await apiClient.get("/users/username-suggestions", {
+        params: { seed: normalizedSeed },
+      });
+      const payload = response.data ?? [];
+      const incomingRaw = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.suggestions)
         ? payload.suggestions
+        : Array.isArray(payload?.data?.suggestions)
+        ? payload.data.suggestions
         : [];
-      setSuggestions(incoming.map((item) => item.replace(/^@+/, "")));
+
+      const incoming = incomingRaw
+        .map((item) => (typeof item === "string" ? item.replace(/^@+/, "") : ""))
+        .filter(Boolean);
+
+      if (suggestionsRequestIdRef.current === requestId) {
+        setSuggestions(incoming);
+      }
     } catch (error) {
-      setSuggestions([]);
+      if (suggestionsRequestIdRef.current === requestId) {
+        setSuggestions([]);
+      }
+    } finally {
+      if (suggestionsRequestIdRef.current === requestId) {
+        setSuggestionsLoading(false);
+      }
     }
   }, []);
 
@@ -412,7 +430,7 @@ export default function UsernameClient({
           <div className="py-6">
             <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
               <span className="text-gray-500">Saran:</span>
-              {loadingUsername ? (
+              {loadingUsername || suggestionsLoading ? (
                 [1, 2, 3].map((id) => (
                   <span
                     key={`username-skeleton-${id}`}

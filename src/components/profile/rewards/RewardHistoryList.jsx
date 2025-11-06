@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-const MAX_ITEMS = 3;
+const MAX_ITEMS = 10;
 
 export default function RewardHistoryList({ history = [], onSelect }) {
   const items = Array.isArray(history) ? history.slice(0, MAX_ITEMS) : [];

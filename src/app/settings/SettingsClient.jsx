@@ -164,6 +164,12 @@ export default function SettingsClient({ profile }) {
         value: email || "Belum diatur",
         href: "/settings/email",
       },
+      {
+        id: "faq",
+        label: "FAQ Herbit Assistant",
+        value: "Pertanyaan umum dan panduan Herbit",
+        href: "/settings/faq",
+      },
     ],
     [
       email,

@@ -95,9 +95,9 @@ export default function PhotoClient({ user }) {
   useEffect(() => {
     if (loadingProfile && !profileData) return;
 
-    const nextPhoto = initialPhoto || fallbackPhoto;
+    const nextPhoto = initialPhoto || (profileData ? fallbackPhoto : "");
     setCurrentPhoto(nextPhoto);
-    setPreview(nextPhoto);
+    setPreview(nextPhoto || "");
     setSelectedFile(null);
   }, [fallbackPhoto, initialPhoto, loadingProfile, profileData]);
 
@@ -257,16 +257,22 @@ export default function PhotoClient({ user }) {
                 <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-full border border-black/10 shadow-sm bg-[#FEA800]">
                   {showPreviewSkeleton ? (
                     <div className="h-full w-full bg-[#FEA800] animate-pulse" />
-                  ) : preview === fallbackPhoto ? (
-                    <span className="text-4xl font-bold text-white">
-                      {initials}
-                    </span>
-                  ) : (
+                  ) : preview && preview !== fallbackPhoto ? (
                     <img
                       src={preview}
                       alt="Pratinjau foto baru"
                       className="h-full w-full object-cover"
                     />
+                  ) : currentPhoto && currentPhoto !== fallbackPhoto ? (
+                    <img
+                      src={currentPhoto}
+                      alt="Foto profil"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-4xl font-bold text-white">
+                      {initials}
+                    </span>
                   )}
                 </div>
                 <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-[#4A2D8B] shadow-sm transition hover:border-[#4A2D8B]/40 hover:bg-[#F4ECFF] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4A2D8B]/40">

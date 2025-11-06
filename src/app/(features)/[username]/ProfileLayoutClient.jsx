@@ -41,6 +41,10 @@ export default function ProfileLayoutClient({ params, children }) {
     router.push("/settings");
   }, [router]);
 
+  const handleEditProfile = useCallback(() => {
+    router.push("/settings");
+  }, [router]);
+
   const contextValue = useMemo(
     () => ({ summary, loading, error, refetch }),
     [summary, loading, error, refetch]
@@ -54,6 +58,7 @@ export default function ProfileLayoutClient({ params, children }) {
             user={headerUser}
             loading={loading}
             onSettings={handleSettings}
+            onEdit={handleEditProfile}
           />
 
           {tabs.length > 0 && (

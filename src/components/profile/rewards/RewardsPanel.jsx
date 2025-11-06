@@ -19,6 +19,65 @@ const normalizeList = (value) => {
   return [];
 };
 
+const normalizeRedemptionPayload = (raw, fallback = {}) => {
+  if (!raw) return fallback || null;
+
+  const instructionsSource =
+    raw.instructions ??
+    raw.instructionsText ??
+    raw.instructions_text ??
+    raw.steps ??
+    fallback.instructions ?? [];
+
+  return {
+    ...fallback,
+    ...raw,
+    name:
+      raw.name ??
+      raw.voucherName ??
+      raw.rewardName ??
+      raw.title ??
+      fallback.name,
+    description:
+      raw.description ??
+      raw.details ??
+      raw.rewardDescription ??
+      raw.reward_description ??
+      raw.desc ??
+      fallback.description,
+    image:
+      raw.image ??
+      raw.imageUrl ??
+      raw.rewardImageUrl ??
+      raw.photoUrl ??
+      fallback.image,
+    code:
+      raw.code ??
+      raw.voucherCode ??
+      raw.voucher_code ??
+      raw.redeemCode ??
+      raw.claimCode ??
+      raw.claim_code ??
+      fallback.code,
+    expiresAt:
+      raw.expiresAt ??
+      raw.expiredAt ??
+      raw.expired_at ??
+      raw.expires_at ??
+      raw.expiryDate ??
+      raw.expiry_date ??
+      fallback.expiresAt,
+    landingUrl:
+      raw.landingUrl ??
+      raw.landingURL ??
+      raw.landing_url ??
+      raw.url ??
+      raw.link ??
+      fallback.landingUrl,
+    instructions: normalizeList(instructionsSource),
+  };
+};
+
 export default function RewardsPanel({
   rewards,
   vouchers,
@@ -43,9 +102,19 @@ export default function RewardsPanel({
   const [redeemError, setRedeemError] = useState(null);
   const [redeeming, setRedeeming] = useState(false);
   const [available, setAvailable] = useState(vouchers?.available ?? []);
-  const [history, setHistory] = useState(vouchers?.history ?? []);
+  const [history, setHistory] = useState(
+    Array.isArray(vouchers?.history)
+      ? vouchers.history.slice(0, 10)
+      : []
+  );
   const [milestones, setMilestones] = useState(
     normalizeMilestones(rewards?.milestone)
+  );
+  const [historyPreviewLoading, setHistoryPreviewLoading] = useState(false);
+
+  const normalizeRedemption = useCallback(
+    (data, fallback = {}) => normalizeRedemptionPayload(data, fallback),
+    []
   );
 
   useEffect(() => {
@@ -57,7 +126,10 @@ export default function RewardsPanel({
   useEffect(() => {
     if (vouchers) {
       setAvailable(vouchers.available ?? []);
-      setHistory(vouchers.history ?? []);
+      const incomingHistory = Array.isArray(vouchers.history)
+        ? vouchers.history.slice(0, 10)
+        : [];
+      setHistory(incomingHistory);
     }
   }, [vouchers]);
 
@@ -115,16 +187,7 @@ export default function RewardsPanel({
           username ? { username } : {}
         );
         const redemption = response.data.data;
-        const instructions = normalizeList(redemption.instructions);
-        const successPayload = {
-          ...(redemption ?? {}),
-          name: redemption.name,
-          image: redemption.imageUrl,
-          code: redemption.code,
-          expiresAt: redemption.expiresAt,
-          landingUrl: redemption.landingUrl,
-          instructions,
-        };
+        const successPayload = normalizeRedemption(redemption, redeemResult ?? {});
         setRedeemResult(successPayload);
         setSelectedVoucher(null);
         setVoucherDetailError(null);
@@ -140,7 +203,40 @@ export default function RewardsPanel({
         setRedeeming(false);
       }
     },
-    [redeeming, onRefresh, username]
+    [redeeming, onRefresh, username, normalizeRedemption, redeemResult]
+  );
+
+  const handleOpenHistoryItem = useCallback(
+    async (item) => {
+      if (!item) return;
+      const identifier =
+        item.id ?? item.redemptionId ?? item.redemption_id ?? item.voucherId;
+
+      const fallback = normalizeRedemption(item, redeemResult ?? {});
+      setRedeemResult(fallback);
+
+      if (!identifier) {
+        console.warn("[RewardsPanel] history item tanpa id", item);
+        return;
+      }
+
+      setHistoryPreviewLoading(true);
+      try {
+        const response = await apiClient.get(`/redemptions/${identifier}`);
+        const detail = response.data?.data ?? response.data ?? null;
+        if (!detail) {
+          throw new Error("Detail riwayat tidak ditemukan");
+        }
+        const normalized = normalizeRedemption(detail, fallback);
+        setRedeemResult(normalized);
+        console.log("[RewardsPanel] history detail", normalized);
+      } catch (error) {
+        console.error("[RewardsPanel] gagal memuat detail riwayat", error);
+      } finally {
+        setHistoryPreviewLoading(false);
+      }
+    },
+    [normalizeRedemption, redeemResult]
   );
 
   if (!rewards && !loading) {
@@ -185,17 +281,7 @@ export default function RewardsPanel({
         )}
       </section>
 
-      <RewardHistoryList
-        history={history}
-        onSelect={(item) =>
-          setRedeemResult((prev) => ({
-            ...(prev ?? {}),
-            ...item,
-            name: item.name,
-            image: item.imageUrl,
-          }))
-        }
-      />
+      <RewardHistoryList history={history.slice(0, 10)} onSelect={handleOpenHistoryItem} />
 
       <RedeemDialog
         voucher={selectedVoucher}
@@ -214,7 +300,11 @@ export default function RewardsPanel({
 
       <RedeemSuccessDialog
         redemption={redeemResult}
-        onClose={() => setRedeemResult(null)}
+        loading={historyPreviewLoading}
+        onClose={() => {
+          setHistoryPreviewLoading(false);
+          setRedeemResult(null);
+        }}
       />
     </div>
   );
@@ -401,7 +491,7 @@ function RewardsSkeleton() {
   );
 }
 
-function RedeemSuccessDialog({ redemption, onClose }) {
+function RedeemSuccessDialog({ redemption, loading = false, onClose }) {
   if (!redemption) return null;
 
   const { name, image, code, expiresAt, landingUrl, instructions } = redemption;
@@ -450,17 +540,25 @@ function RedeemSuccessDialog({ redemption, onClose }) {
           <div className="rounded-2xl border border-[#FACC15]/40 bg-[#FFF8EB] px-4 py-3 text-center">
             <p className="text-xs font-semibold text-[#FEA800]">Kode voucher</p>
             <div className="mt-2 rounded-xl border border-dashed border-[#FACC15] bg-white px-3 py-2 text-center text-sm font-semibold text-[#4A2D8B]">
-              {code}
+              {loading && !code ? "Memuat..." : code ?? "—"}
             </div>
           </div>
 
           <div className="space-y-2 text-xs text-gray-600">
             <p className="font-semibold text-[#475467]">Cara pakai voucher:</p>
-            <ol className="list-decimal space-y-1 pl-5">
-              {normalizedInstructions.map((step, idx) => (
-                <li key={`instruction-${idx}`}>{step}</li>
-              ))}
-            </ol>
+            {loading && normalizedInstructions.length === 0 ? (
+              <p className="text-gray-400">Memuat detail...</p>
+            ) : (
+              <ol className="list-decimal space-y-1 pl-5">
+                {normalizedInstructions.length > 0 ? (
+                  normalizedInstructions.map((step, idx) => (
+                    <li key={`instruction-${idx}`}>{step}</li>
+                  ))
+                ) : (
+                  <li>Ikuti instruksi yang tertera pada detail voucher.</li>
+                )}
+              </ol>
+            )}
           </div>
 
           {landingUrl && (
