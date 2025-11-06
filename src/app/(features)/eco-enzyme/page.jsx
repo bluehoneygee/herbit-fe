@@ -8,7 +8,7 @@ import EcoEnzymeProgress from "@/components/ecoenzyme/EcoEnzymeProgress";
 import EcoEnzymeSteps from "@/components/ecoenzyme/EcoEnzymeSteps";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
-import ChatButton from "@/components/floating-chat/ChatButton";
+import HerbitAssistant from "@/components/floating-chat/HerbitAssistant";
 import Link from "next/link";
 import apiClient from "@/lib/apiClient";
 
@@ -255,7 +255,7 @@ export default function EcoEnzymePage() {
         <EcoEnzymeSteps />
       </div>
 
-      <ChatButton />
+      <HerbitAssistant />
     </main>
   );
 }
