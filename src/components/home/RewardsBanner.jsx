@@ -39,7 +39,7 @@ export default function RewardsBanner({ items = [], loading = false }) {
 
   if (loading) {
     return (
-      <div className="h-[92px] w-full rounded-2xl border border-white/40 bg-white/60 shadow-sm animate-pulse" />
+      <div className="h-[140px] w-full rounded-2xl border border-white/40 bg-white/60 shadow-sm animate-pulse" />
     );
   }
 
@@ -62,19 +62,18 @@ export default function RewardsBanner({ items = [], loading = false }) {
           className="flex transition-transform duration-500 ease-out"
           style={{
             transform: `translateX(-${activeIndex * 100}%)`,
-            width: `${banners.length * 100}%`,
           }}
         >
           {banners.map((banner) => (
             <a
               key={banner.name}
               href={banner.href}
-              className="block w-full flex-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FEA800]"
+              className="block min-w-full flex-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FEA800]"
             >
               <img
                 src={banner.image}
                 alt={banner.name}
-                className="block h-[92px] w-full rounded-2xl object-cover"
+                className="block h-[140px] w-full rounded-2xl object-cover"
               />
             </a>
           ))}

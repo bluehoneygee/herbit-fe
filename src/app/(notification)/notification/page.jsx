@@ -123,7 +123,9 @@ function NotificationItem({ item }) {
           </p>
           <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
             <ClockIcon />
-            <span>{timeLabel}</span>
+            <span>
+              {timeLabel === "Baru saja" ? timeLabel : `${timeLabel} yang lalu`}
+            </span>
           </div>
         </div>
       </div>
@@ -179,7 +181,7 @@ const RAW_API = (process.env.NEXT_PUBLIC_API_URL || "").trim();
 const API =
   RAW_API && /^https?:\/\//.test(RAW_API)
     ? RAW_API.replace(/\/+$/, "")
-    : "http://localhost:5000/api";
+    : "http://localhost:5001/api";
 
 /* -------------- page -------------- */
 export default function NotificationPage() {
@@ -254,7 +256,21 @@ export default function NotificationPage() {
         });
       }
 
-      setItems(Array.isArray(payload) ? payload : []);
+      const normalized = Array.isArray(payload) ? payload : [];
+      setItems(normalized);
+
+      if (typeof window !== "undefined") {
+        const latestCreatedAt = normalized[0]?.createdAt;
+        const readTimestamp =
+          latestCreatedAt ?? new Date().toISOString();
+        window.localStorage.setItem("notification:lastReadAt", readTimestamp);
+        if (latestCreatedAt) {
+          window.localStorage.setItem(
+            "notification:lastFetchedAt",
+            latestCreatedAt
+          );
+        }
+      }
     } catch (e) {
       console.error("[Notifications] fetch failed:", e);
       setItems([]);
@@ -273,6 +289,11 @@ export default function NotificationPage() {
         setItems([]);
         setShowModal(false);
         console.log("✅ Semua notifikasi berhasil dihapus");
+        if (typeof window !== "undefined") {
+          const nowIso = new Date().toISOString();
+          window.localStorage.setItem("notification:lastReadAt", nowIso);
+          window.localStorage.removeItem("notification:lastFetchedAt");
+        }
       } else {
         throw new Error("Gagal menghapus notifikasi");
       }
@@ -292,6 +313,7 @@ export default function NotificationPage() {
   const handleBack = useCallback(() => router.push("/"), [router]);
 
   const hasData = (items?.length ?? 0) > 0;
+  const loading = items === null;
 
   return (
     <main className="min-h-screen bg-white">
@@ -316,10 +338,16 @@ export default function NotificationPage() {
             Notifications
           </h1>
 
-          {hasData && (
+          {loading ? (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-400 text-sm font-medium">
+              <div className="h-4 w-4 rounded-full bg-gray-200 animate-pulse" />
+              <span className="animate-pulse">Memuat…</span>
+            </div>
+          ) : (
             <button
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={!hasData}
             >
               <TrashIcon size={16} />
               <span>Clear All</span>
@@ -329,7 +357,7 @@ export default function NotificationPage() {
       </header>
 
       <section className="px-4 py-8">
-        {items === null && (
+        {loading && (
           <div className="space-y-4 animate-pulse">
             {[0, 1, 2].map((i) => (
               <div

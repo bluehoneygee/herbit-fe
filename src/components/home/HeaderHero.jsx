@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import CalendarOverlay from "./CalendarOverlay";
+import apiClient from "@/lib/apiClient";
 
 function CalendarIcon({ size = 20 }) {
   return (
@@ -17,45 +18,44 @@ function CalendarIcon({ size = 20 }) {
   );
 }
 
-function BellIcon({ size = 20, color = "#111827" }) {
+function BellIcon({ size = 20, color = "#111827", showIndicator = false }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M19 16.5H5.00003C5.00003 16.5 6.5 14.5 6.5 10.5C6.5 6.91015 9.41016 4 13 4C16.5899 4 19.5 6.91015 19.5 10.5C19.5 14.5 21 16.5 21 16.5H19Z"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10.5 18C10.8029 18.8825 11.7008 19.5 12.75 19.5C13.7992 19.5 14.6971 18.8825 15 18"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx="17.5"
-        cy="6.5"
-        r="5"
-        fill="#E24B4B"
-        stroke="#FFFFFF"
-        strokeWidth="1"
-      />
-    </svg>
+    <div className="relative inline-flex">
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M19 16.5H5.00003C5.00003 16.5 6.5 14.5 6.5 10.5C6.5 6.91015 9.41016 4 13 4C16.5899 4 19.5 6.91015 19.5 10.5C19.5 14.5 21 16.5 21 16.5H19Z"
+          stroke={color}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M10.5 18C10.8029 18.8825 11.7008 19.5 12.75 19.5C13.7992 19.5 14.6971 18.8825 15 18"
+          stroke={color}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {showIndicator && (
+        <span className="absolute -right-1.5 -top-1 h-3 w-3 rounded-full bg-[#E24B4B] ring-2 ring-white" />
+      )}
+    </div>
   );
 }
 
 export default function HeaderHero({ user, loading = false }) {
   const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const calendarButtonRef = useRef(null);
   const calendarPanelRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -168,7 +168,79 @@ export default function HeaderHero({ user, loading = false }) {
     });
   }, [updateCalendarPosition]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkUnread() {
+      try {
+        const response = await apiClient.get("/notifications", {
+          params: { limit: 1 },
+          headers: { "Cache-Control": "no-cache" },
+          withCredentials: true,
+        });
+        const list = Array.isArray(response.data) ? response.data : [];
+        const latest = list[0];
+        if (!latest || !latest.createdAt) {
+          if (!cancelled) setHasUnreadNotifications(false);
+          return;
+        }
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            "notification:lastFetchedAt",
+            latest.createdAt
+          );
+          const lastRead = window.localStorage.getItem(
+            "notification:lastReadAt"
+          );
+          const latestTs = new Date(latest.createdAt).getTime();
+          const lastReadTs = lastRead ? new Date(lastRead).getTime() : 0;
+          if (!cancelled) {
+            setHasUnreadNotifications(latestTs > lastReadTs);
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setHasUnreadNotifications(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setNotificationsLoaded(true);
+        }
+      }
+    }
+
+    checkUnread();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkUnread();
+      }
+    };
+
+    const handleStorage = (event) => {
+      if (event.key === "notification:lastReadAt") {
+        checkUnread();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
   const handleNotificationClick = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        "notification:lastReadAt",
+        new Date().toISOString()
+      );
+      setHasUnreadNotifications(false);
+    }
     router.push("/notification");
   }, [router]);
 
@@ -193,7 +265,10 @@ export default function HeaderHero({ user, loading = false }) {
             style={{ lineHeight: 0 }}
             aria-hidden="true"
           >
-            <BellIcon size={28} />
+            <div
+              className="h-7 w-7 rounded-full bg-gray-200 animate-pulse"
+              aria-hidden="true"
+            />
           </button>
         </div>
         <div className="mx-4 mt-6 flex items-start gap-3">
@@ -284,15 +359,26 @@ export default function HeaderHero({ user, loading = false }) {
           >
             <CalendarIcon size={28} />
           </button>
-          <button
-            aria-label="Notifikasi"
-            className="p-0 m-0 bg-transparent border-0 inline-flex items-center justify-center cursor-pointer"
-            onClick={handleNotificationClick}
-            style={{ lineHeight: 0 }}
-            type="button"
-          >
-            <BellIcon size={28} color="#111827" />
-          </button>
+          {!notificationsLoaded ? (
+            <div
+              className="h-7 w-7 rounded-full bg-gray-200 animate-pulse"
+              aria-hidden="true"
+            />
+          ) : (
+            <button
+              aria-label="Notifikasi"
+              className="p-0 m-0 bg-transparent border-0 inline-flex items-center justify-center cursor-pointer"
+              onClick={handleNotificationClick}
+              style={{ lineHeight: 0 }}
+              type="button"
+            >
+              <BellIcon
+                size={28}
+                color="#111827"
+                showIndicator={hasUnreadNotifications}
+              />
+            </button>
+          )}
         </div>
         <div className="mx-4 mt-6 flex items-start gap-3" aria-live="polite">
           <div className="flex-1 min-w-0 flex flex-col gap-1">

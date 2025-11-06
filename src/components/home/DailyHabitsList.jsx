@@ -5,12 +5,24 @@ export default function DailyHabitsList({
   loading = false,
   scrollable = false,
 }) {
-  const limitedItems = Array.isArray(items) ? items.slice(0, 3) : [];
+  const getLimit = () => {
+    if (typeof window === "undefined") return 2;
+    const width = window.innerWidth;
+
+    if (width >= 1024) return 5; // contoh lg+
+    if (width >= 768) return 3; // contoh md
+    if (width >= 391) return 2; // sm
+    return 1; // < 391
+  };
+
+  const limit = Math.max(1, getLimit());
+  const limitedItems = Array.isArray(items) ? items.slice(0, limit) : [];
 
   if (loading) {
+    const placeholders = Array.from({ length: limit }, (_, index) => index);
     return (
       <div className="space-y-3">
-        {[1, 2].map((placeholder) => (
+        {placeholders.map((placeholder) => (
           <div
             key={placeholder}
             className="rounded-2xl border border-black/10 bg-white p-3 shadow-sm flex items-center animate-pulse"

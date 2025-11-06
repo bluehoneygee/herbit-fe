@@ -1,7 +1,6 @@
 "use client";
 
 import DailyHabitsList from "@/components/home/DailyHabitsList";
-import DaysScroller from "@/components/home/DaysScroller";
 import EcoEnzymActive from "@/components/home/EcoEnzymActive";
 import HeaderHero from "@/components/home/HeaderHero";
 import ProgressCard from "@/components/home/ProgressCard";
@@ -79,72 +78,72 @@ export default function HomePage() {
   }, [ecoenzym]);
 
   return (
-    <main className="relative min-h-screen">
-      <div className="absolute inset-x-0 top-0 -z-10">
-        <div className="h-[420px] w-full rounded-b-[80px] bg-transparent" />
+    <main className="relative min-h-screen bg-white">
+      <div className="absolute inset-x-0 top-0 -z-10 h-[420px] w-full rounded-b-[80px] bg-transparent" />
+
+      <div
+        className="sticky top-0 z-20 border-black/5 bg-white/95 backdrop-blur"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <HeaderHero user={user} loading={loading} />
+
+        <div className="mt-6 space-y-6">
+          {error && (
+            <div className="mx-4 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
+              Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
+            </div>
+          )}
+
+          <div className="mx-4">
+            <RewardsBanner items={rewardsBanners} loading={loading} />
+          </div>
+
+          <div className="mx-4">
+            <ProgressCard
+              percent={progressData.percent}
+              title={progressData.title}
+              subtitle={progressData.subtitle}
+              loading={loading}
+            />
+          </div>
+
+          <div className="space-y-3 px-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">
+                Eco-enzym Aktif
+              </h3>
+              <Link
+                href="/eco-enzyme"
+                className="text-[11px] font-semibold text-gray-800 tracking-wide"
+              >
+                LIHAT SEMUA
+              </Link>
+            </div>
+            <EcoEnzymActive
+              batch={ecoData.batch}
+              info={ecoData.info}
+              progress={ecoData.progress}
+              loading={loading}
+            />
+          </div>
+        </div>
       </div>
 
-      <HeaderHero user={user} loading={loading} />
-
-      <section className="mt-6 space-y-6 pb-6">
-        {error && (
-          <div className="mx-4 rounded-2xl border border-[#E24B4B]/20 bg-[#E24B4B]/10 p-4 text-sm text-[#8B1E1E]">
-            Gagal memuat data: {error}. Silakan coba beberapa saat lagi.
-          </div>
-        )}
-
-        <div className="mx-4">
-          <DaysScroller />
+      <section className="space-y-3 px-4 pb-28 pt-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900">Daily Habits</h3>
+          <Link
+            href="/tracker"
+            className="text-[11px] font-semibold text-gray-800 tracking-wide"
+          >
+            LIHAT SEMUA
+          </Link>
         </div>
-
-        <div className="mx-4">
-          <RewardsBanner items={rewardsBanners} loading={loading} />
-        </div>
-
-        <div className="mx-4">
-          <ProgressCard
-            percent={progressData.percent}
-            title={progressData.title}
-            subtitle={progressData.subtitle}
-            loading={loading}
-          />
-        </div>
-
-        <div className="space-y-3 px-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Eco-enzym Aktif
-            </h3>
-            <Link
-              href="/eco-enzyme"
-              className="text-[11px] font-semibold text-gray-800 tracking-wide"
-            >
-              LIHAT SEMUA
-            </Link>
-          </div>
-          <EcoEnzymActive
-            batch={ecoData.batch}
-            info={ecoData.info}
-            progress={ecoData.progress}
-            loading={loading}
-          />
-        </div>
-
-        <div className="space-y-3 px-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Daily Habits
-            </h3>
-            <Link
-              href="/tracker"
-              className="text-[11px] font-semibold text-gray-800 tracking-wide"
-            >
-              LIHAT SEMUA
-            </Link>
-          </div>
-          <div className="max-h-18 sm:max-h-[150px] overflow-y-auto overscroll-contain pr-1 ">
-            <DailyHabitsList items={habitsToday} loading={loading} />
-          </div>
+        <div
+          className="overflow-y-auto overscroll-contain pr-1"
+          style={{ maxHeight: "clamp(240px, 55vh, 420px)" }}
+        >
+          <DailyHabitsList items={habitsToday} loading={loading} />
         </div>
       </section>
     </main>
