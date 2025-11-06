@@ -107,27 +107,28 @@ export default function HomePage() {
             />
           </div>
 
-          <div className="space-y-3 px-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">
-                Eco-enzym Aktif
-              </h3>
-              <Link
-                href="/eco-enzyme"
-                className="text-[11px] font-semibold text-gray-800 tracking-wide"
-              >
-                LIHAT SEMUA
-              </Link>
-            </div>
-            <EcoEnzymActive
-              batch={ecoData.batch}
-              info={ecoData.info}
-              progress={ecoData.progress}
-              loading={loading}
-            />
-          </div>
         </div>
       </div>
+
+      <section className="space-y-3 px-4 pt-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900">
+            Eco-enzym Aktif
+          </h3>
+          <Link
+            href="/eco-enzyme"
+            className="text-[11px] font-semibold text-gray-800 tracking-wide"
+          >
+            LIHAT SEMUA
+          </Link>
+        </div>
+        <EcoEnzymActive
+          batch={ecoData.batch}
+          info={ecoData.info}
+          progress={ecoData.progress}
+          loading={loading}
+        />
+      </section>
 
       <section className="space-y-3 px-4 pb-28 pt-6">
         <div className="flex items-center justify-between">
@@ -139,12 +140,7 @@ export default function HomePage() {
             LIHAT SEMUA
           </Link>
         </div>
-        <div
-          className="overflow-y-auto overscroll-contain pr-1"
-          style={{ maxHeight: "clamp(240px, 55vh, 420px)" }}
-        >
-          <DailyHabitsList items={habitsToday} loading={loading} />
-        </div>
+        <DailyHabitsList items={habitsToday} loading={loading} />
       </section>
     </main>
   );

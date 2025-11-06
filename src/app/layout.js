@@ -11,6 +11,9 @@ export const metadata = {
   title: "HERBIT",
   description:
     "HERBIT membantu ibu rumah tangga menumbuhkan kebiasaan hijau dari rumah dengan tracker, eco-enzym, chat AI, dan rewards.",
+  icons: {
+    icon: "/splashScreen/1.png",
+  },
 };
 
 export default function RootLayout({ children }) {
