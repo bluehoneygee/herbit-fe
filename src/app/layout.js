@@ -22,7 +22,7 @@ export const metadata = {
     siteName: "HERBIT",
     images: [
       {
-        url: "/splashScreen/1.png",
+        url: "https://herbit-fe.vercel.app/splashScreen/1.png",
         width: 1200,
         height: 630,
         alt: "HERBIT",
