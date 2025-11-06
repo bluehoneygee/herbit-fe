@@ -234,13 +234,6 @@ export default function HeaderHero({ user, loading = false }) {
   }, []);
 
   const handleNotificationClick = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        "notification:lastReadAt",
-        new Date().toISOString()
-      );
-      setHasUnreadNotifications(false);
-    }
     router.push("/notification");
   }, [router]);
 
