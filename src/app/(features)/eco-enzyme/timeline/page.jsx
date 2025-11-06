@@ -424,15 +424,6 @@ export default function TimelinePage() {
   const month2Data = useMemo(() => buildMonthData(2), [buildMonthData]);
   const month3Data = useMemo(() => buildMonthData(3), [buildMonthData]);
 
-    userId,
-    loading,
-    error,
-    project,
-    month1Data,
-    month2Data,
-    month3Data,
-  });
-
   if (userLoading || loading) {
     return <div className="p-8 text-center">Loading...</div>;
   }
